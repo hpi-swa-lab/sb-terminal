@@ -113,10 +113,10 @@ TeletypeWindow >> buildConfigMenu [
 			add: 'xterm' selector: #menuBlock: argument: [TerminalType _ XtermEmulator];
 			balloonTextForLastItem: 'Emulate an xterm terminal.');
 		balloonTextForLastItem: 'Select the kind of terminal emulation to use.'.
-	m
+	"m
 		add: 'font (', SimpleTextMorph defaultFont, ')' subMenu: self buildFontMenu;
 		balloonTextForLastItem: 'Set the default font for terminal windows.
-(Changes take effect in NEW windows, not this one.)'.
+(Changes take effect in NEW windows, not this one.)'."
 
 	self menu: m add: 'enable auto-close' var: AutoClose eval: [AutoClose _ AutoClose not]
 			help: 'Automatically close the window when the session terminates.'.
