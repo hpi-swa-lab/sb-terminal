@@ -4738,7 +4738,9 @@ SimpleTextMorph >> drawCursorOn: aCanvas [
 SimpleTextMorph >> drawLineOn: aCanvas [
 
 	| port tmp |
-	self runsDo: [:l :r :fg :bg :em |
+	self runsDo: [:l :r :xfg :xbg :em | | fg bg |
+		fg := xfg.
+		bg := xbg.
 		port _ bounds left + (l - 1 * pitch) @ bounds top corner: bounds left + (lineState stringSize * pitch) @ bounds bottom.
 		(em bitAnd: 64) == 64 ifTrue: [tmp _ fg.  fg _ bg.  bg _ tmp].
 		aCanvas
@@ -4834,7 +4836,9 @@ SimpleTextMorph >> normalColours [
 SimpleTextMorph >> oldDrawLineOn: aCanvas [
 
 	| port tmp |
-	self runsDo: [:l :r :fg :bg :em |
+	self runsDo: [:l :r :xfg :xbg :em | | fg bg |
+		fg := xfg.
+		bg := xbg.
 		port _ bounds insetOriginBy: (pitch * (l - 1) @ 0) cornerBy: 0@0.
 		(em bitAnd: 64) == 64 ifTrue: [tmp _ fg.  fg _ bg.  bg _ tmp].
 		aCanvas
