@@ -1,0 +1,7 @@
+OrderedDictionary {
+	'packages/SBBash' : #SquotTonelSerializer,
+	'packages/Communications-Abstract' : #SquotTonelSerializer,
+	'packages/Communications-Endpoints' : #SquotTonelSerializer,
+	'packages/Communications-Protocols' : #SquotTonelSerializer,
+	'packages/Communications-Terminal Emulation' : #SquotTonelSerializer
+}
