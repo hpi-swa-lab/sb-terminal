@@ -1,8 +1,9 @@
 MIT License
 
-Copyright (c) 2022 Ian Piumarta
+Copyright (c) 2002-2022 Ian Piumarta
   for packages/Communications-Endpoints, packages/Communications-Protocols, packages/Communications-Terminal Emulation, packages/Communications-Terminal Emulation
-Copyright (c) 2022 Software Architecture Group
+
+Copyright (c) 2022 Software Architecture Group (Hasso Plattner Institute)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
