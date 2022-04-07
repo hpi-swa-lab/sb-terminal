@@ -4,7 +4,7 @@ An in-progress implementation of a terminal interface making use of [Sandblocks]
 ## Setup
 Pre-built PseudoTTYPlugin (step 2) is compiled only for linux-amd64. You can compile your own via the [opensmalltalk-vm](https://github.com/OpenSmalltalk/opensmalltalk-vm/) repo.
 
-1. Download and extract [http://files.squeak.org/trunk/Squeak6.0alpha-21486-64bit/Squeak6.0alpha-21486-64bit-202112201228-Linux-x64.tar.gz]()
+1. Download and extract [http://files.squeak.org/trunk/Squeak6.0alpha-21486-64bit/Squeak6.0alpha-21486-64bit-202112201228-Linux-x64.tar.gz](http://files.squeak.org/trunk/Squeak6.0alpha-21486-64bit/Squeak6.0alpha-21486-64bit-202112201228-Linux-x64.tar.gz)
 2. Copy `sb-bash/bin/PseudoTTYPlugin.so` to `bin/` of your extracted squeak-trunk folder
 3. Run squeak, then run in a workspace:
 ```smalltalk
