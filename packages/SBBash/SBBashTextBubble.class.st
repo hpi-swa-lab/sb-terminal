@@ -56,7 +56,7 @@ SBBashTextBubble >> launchBash [
 
 	(pty := PseudoTTY command: '/bin/bash' arguments: {'-i'}) isNil ifTrue: [^ self error: 'could not create process'].
 	
-	[[pty isConnected] whileTrue: [self readDataFromBash]] fork
+	[[self readDataFromBash] repeat] fork
 ]
 
 { #category : #'as yet unclassified' }
@@ -70,15 +70,16 @@ SBBashTextBubble >> outOfWorld: aWorld [
 { #category : #'as yet unclassified' }
 SBBashTextBubble >> readDataFromBash [
 
-	| buf |
+	| buf output |
 	pty isConnected ifFalse: [^ nil].
-	(buf := pty peekUpToEnd) isNil ifTrue: [ | output |
-		buf := pty upToEnd asString.
-		output := '' writeStream.
-		self readFrom: buf readStream writeInto: output.
-		Project current addDeferredUIMessage: [self addBashOutput: output contents]].
-	"return useless?"
-	^ buf
+	(buf := pty peekUpToEnd) isNil ifTrue: [buf := pty upToEnd].
+	
+	output := '' writeStream.
+	SBToggledCode
+		comment: ''
+		active: 1
+		do: {[output nextPutAll: buf asString]. [self readFrom: buf asString readStream writeInto: output]}.
+	Project current addDeferredUIMessage: [self addBashOutput: output contents]
 ]
 
 { #category : #'as yet unclassified' }
