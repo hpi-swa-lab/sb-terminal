@@ -16,7 +16,29 @@ SBBashTextBubble >> absorbsInput: anEvent [
 { #category : #'as yet unclassified' }
 SBBashTextBubble >> addBashOutput: aString [
 
-	self contents: self contents, aString
+	self contents: self contents asText, aString
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTextBubble >> colorFrom: parameter [
+
+	parameter = '30' ifTrue: [^ TextColor black].
+	parameter = '31' ifTrue: [^ TextColor red].
+	parameter = '32' ifTrue: [^ TextColor green].
+	parameter = '33' ifTrue: [^ TextColor yellow].
+	parameter = '34' ifTrue: [^ TextColor blue].
+	parameter = '35' ifTrue: [^ TextColor magenta].
+	parameter = '36' ifTrue: [^ TextColor cyan].
+	parameter = '37' ifTrue: [^ TextColor white].
+	parameter = '90' ifTrue: [^ TextColor gray].
+	parameter = '91' ifTrue: [^ TextColor red].
+	parameter = '92' ifTrue: [^ TextColor green].
+	parameter = '93' ifTrue: [^ TextColor yellow].
+	parameter = '94' ifTrue: [^ TextColor blue].
+	parameter = '95' ifTrue: [^ TextColor magenta].
+	parameter = '96' ifTrue: [^ TextColor cyan].
+	parameter = '97' ifTrue: [^ TextColor white].
+	^ TextColor black
 ]
 
 { #category : #'as yet unclassified' }
@@ -24,6 +46,7 @@ SBBashTextBubble >> initialize [
 
 	super initialize.
 	
+	self font: TextStyle defaultFixedFont.
 	self launchBash
 ]
 
@@ -48,6 +71,9 @@ wird aktuell von set title rausgefiltert"
 { #category : #'as yet unclassified' }
 SBBashTextBubble >> keyStroke: anEvent [
 
+	Transcript showln: ''.
+	Transcript showln: 'keyStroke: '.
+	Transcript showln: anEvent.
 	pty nextPut: anEvent keyCharacter
 ]
 
@@ -72,31 +98,36 @@ SBBashTextBubble >> readDataFromBash [
 
 	| buf output |
 	pty isConnected ifFalse: [^ nil].
+	Processor yield.
 	(buf := pty peekUpToEnd) isNil ifTrue: [buf := pty upToEnd].
-	
-	output := '' writeStream.
-	SBToggledCode
-		comment: ''
-		active: 1
-		do: {[output nextPutAll: buf asString]. [self readFrom: buf asString readStream writeInto: output]}.
-	Project current addDeferredUIMessage: [self addBashOutput: output contents]
+	output := '' asText.
+	self readFrom: buf asString readStream writeInto: output.
+	Project current addDeferredUIMessage: [self addBashOutput: output]
 ]
 
 { #category : #'as yet unclassified' }
 SBBashTextBubble >> readFrom: input writeInto: output [
 
-	| state sequence |
+	| state sequence color |
 	state := #read.
+	color := TextColor black.
+	SBToggledCode comment: '' active: 1 do: {
+		[
+			Transcript showln: 'stream: '.
+			Transcript show: input contents].
+		[output append: input upToEnd]}.
 	[input atEnd] whileFalse: [
 		state = #escape ifTrue: [
 			sequence := input upToAnyOf: #($; $m).
 			"color"
 			
-			sequence = '[01' ifTrue: [ | foregroundColor |
-				foregroundColor := input upTo: $m.
+			sequence = '[01' ifTrue: [
+				color := self colorFrom: (input upTo: $m).
 				state := #read].
-			"reset color"
-			sequence = '[00' ifTrue: [state := #read].
+			"reset all attributes"
+			(sequence = '[00' or: sequence = '[0') ifTrue: [
+				color := TextColor black.
+				state := #read].
 			"set title"
 			sequence = ']0' ifTrue: [ | title |
 				title := input upTo: (Character value: 7).
@@ -105,7 +136,9 @@ SBBashTextBubble >> readFrom: input writeInto: output [
 			state := #escape.
 			input next].
 		state = #read ifTrue: [
-			output nextPutAll: (input upTo: Character escape).
+			output append: ((input upTo: Character escape) asText
+				addAttribute: color;
+				addAttribute: (TextFontReference toFont: TextStyle defaultFixedFont)).
 			state := #escape]]
 ]
 
