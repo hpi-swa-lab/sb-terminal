@@ -2,7 +2,8 @@ Class {
 	#name : #SBBashTextBubble,
 	#superclass : #SBTextBubble,
 	#instVars : [
-		'pty'
+		'pty',
+		'closed'
 	],
 	#category : #SBBash
 }
@@ -82,13 +83,15 @@ SBBashTextBubble >> launchBash [
 
 	(pty := PseudoTTY command: '/bin/bash' arguments: {'-i'}) isNil ifTrue: [^ self error: 'could not create process'].
 	
-	[[self readDataFromBash] repeat] fork
+	closed := false.
+	[[self readDataFromBash] doWhileFalse: [closed]] fork
 ]
 
 { #category : #'as yet unclassified' }
 SBBashTextBubble >> outOfWorld: aWorld [
 
 	super outOfWorld: aWorld.
+	closed := true.
 	
 	pty close
 ]
@@ -97,7 +100,7 @@ SBBashTextBubble >> outOfWorld: aWorld [
 SBBashTextBubble >> readDataFromBash [
 
 	| buf output |
-	pty isConnected ifFalse: [^ nil].
+	(pty isConnected not or: [closed]) ifTrue: [^ nil].
 	Processor yield.
 	(buf := pty peekUpToEnd) isNil ifTrue: [buf := pty upToEnd].
 	output := '' asText.
