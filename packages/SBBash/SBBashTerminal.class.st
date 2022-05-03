@@ -41,13 +41,16 @@ SBBashTerminal >> initialize [
 		addMorphBack: (SBButton new onClick: [self startREPL]);
 		addMorphBack: (commandBlocks := SBBlock new
 			changeTableLayout;
-			listDirection: #topToBottom);
+			listDirection: #topToBottom;
+			hResizing: #spaceFill;
+			vResizing: #shrinkWrap;
+			cellGap: 4);
 		cellGap: 4;
 		hResizing: #rigid;
 		vResizing: #shrinkWrap;
 		attachDecorator: SBResizableDecorator new;
 		attachDecorator: SBForceMoveDecorator newConfigured;
-		width: 300;
+		width: 600;
 		changeTableLayout;
 		layoutInset: 4.
 	
@@ -83,7 +86,6 @@ SBBashTerminal >> readDataFromBash [
 	(buf := pty peekUpToEnd) isNil ifTrue: [buf := pty upToEnd].
 	ps1 := '' asText.
 	output := '' asText.
-	1 halt.
 	self readFrom: buf asString readStream writeInto: ps1 and: output.
 	ps1 = '' ifFalse: [ | newCommandBlock |
 		commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).

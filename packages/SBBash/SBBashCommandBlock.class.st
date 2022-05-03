@@ -14,13 +14,21 @@ SBBashCommandBlock >> initialize [
 	super initialize.
 	self
 		addMorphBack: (SBRow new
-			addMorphBack: (ps1 := SBTextBubble new
-				contents: 'ps1';
-				hResizing: #shrinkWrap);
-			addMorphBack: (SBTextBubble new hResizing: #spaceFill));
+			changeTableLayout;
+			addMorphBack: (ps1 := SBTextBubble new vResizing: #shrinkWrap);
+			addMorphBack: (SBTextBubble new
+				contents: 'TODO: type here';
+				hResizing: #spaceFill;
+				vResizing: #spaceFill);
+			hResizing: #spaceFill;
+			cellGap: 2);
 		addMorphBack: (output := SBTextBubble new
 			hResizing: #spaceFill;
-			vResizing: #shrinkWrap)
+			vResizing: #shrinkWrap);
+		cellGap: 2;
+		hResizing: #spaceFill;
+		vResizing: #shrinkWrap;
+		changeTableLayout
 ]
 
 { #category : #'as yet unclassified' }
@@ -32,7 +40,7 @@ SBBashCommandBlock >> output [
 { #category : #'as yet unclassified' }
 SBBashCommandBlock >> output: aString [
 
-	output contents: output contents asText, aString
+	output contents: output contents, aString asString
 ]
 
 { #category : #'as yet unclassified' }
@@ -44,5 +52,5 @@ SBBashCommandBlock >> ps1 [
 { #category : #'as yet unclassified' }
 SBBashCommandBlock >> ps1: aString [
 
-	ps1 contents: ps1 contents asText, aString
+	ps1 contents: ps1 contents, aString asString
 ]
