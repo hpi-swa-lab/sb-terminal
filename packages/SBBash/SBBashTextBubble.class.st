@@ -84,6 +84,8 @@ SBBashTextBubble >> launchBash [
 	(pty := PseudoTTY command: '/bin/bash' arguments: {'-i'}) isNil ifTrue: [^ self error: 'could not create process'].
 	
 	closed := false.
+	pty nextPutAll: 'PS1="\033[81m${PS1}\033[80m"'.
+	pty nextPut: Character return.
 	[[self readDataFromBash] doWhileFalse: [closed]] fork
 ]
 
@@ -94,6 +96,12 @@ SBBashTextBubble >> outOfWorld: aWorld [
 	closed := true.
 	
 	pty close
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTextBubble >> pty [
+
+	^ pty
 ]
 
 { #category : #'as yet unclassified' }
@@ -123,7 +131,6 @@ SBBashTextBubble >> readFrom: input writeInto: output [
 		state = #escape ifTrue: [
 			sequence := input upToAnyOf: #($; $m).
 			"color"
-			
 			sequence = '[01' ifTrue: [
 				color := self colorFrom: (input upTo: $m).
 				state := #read].
