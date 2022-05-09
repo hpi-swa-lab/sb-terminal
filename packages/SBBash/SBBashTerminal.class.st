@@ -66,6 +66,12 @@ SBBashTerminal >> initialize [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashTerminal >> isArtefact [
+
+	^ true
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTerminal >> launchBash [
 
 	(pty := PseudoTTY command: '/bin/bash' arguments: {'-i'}) isNil ifTrue: [^ self error: 'could not create process'].
@@ -101,7 +107,9 @@ SBBashTerminal >> readDataFromBash [
 	ps1 := '' asText.
 	output := '' asText.
 	self readFrom: buf asString readStream writeInto: ps1 and: output.
-	((commandBlocks submorphs size = 0) not and: (output = '') not) ifTrue: [Project current addDeferredUIMessage: [commandBlocks lastSubmorph output: output]].
+	((commandBlocks submorphs size = 0) not and: (output = '') not) ifTrue: [ | currentOutput |
+		currentOutput := commandBlocks lastSubmorph.
+		Project current addDeferredUIMessage: [currentOutput output: output]].
 	(ps1 = '') not ifTrue: [ | newCommandBlock |
 		commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
 		newCommandBlock ps1: ps1.
