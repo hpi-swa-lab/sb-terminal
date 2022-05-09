@@ -33,6 +33,15 @@ SBBashTerminal >> colorFrom: parameter [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashTerminal >> example [
+
+	SBMorphExample
+		setUp: [self class new]
+		cases: {SBMorphExampleCase name: 'example 1' caseBlock: [:m | m]}
+		extent: 300 @ 300
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTerminal >> initialize [
 
 	super initialize.
@@ -78,6 +87,12 @@ SBBashTerminal >> outOfWorld: aWorld [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashTerminal >> pty [
+
+	^ pty
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTerminal >> readDataFromBash [
 
 	| buf output ps1 |
@@ -87,6 +102,7 @@ SBBashTerminal >> readDataFromBash [
 	ps1 := '' asText.
 	output := '' asText.
 	self readFrom: buf asString readStream writeInto: ps1 and: output.
+	Transcript showln: buf asString.
 	ps1 = '' ifFalse: [ | newCommandBlock |
 		commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
 		newCommandBlock ps1: ps1].
@@ -96,8 +112,8 @@ SBBashTerminal >> readDataFromBash [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 
-	| sequence prevState |
-	color := TextColor black.
+	| sequence prevState foreGround |
+	foreGround := TextColor black.
 	"TODO: escape code lesen als eigene Methode und dann direkt hinter state = #output oder #ps1 aufrufen statt eigenen State dafür zu machen"
 	[input atEnd] whileFalse: [
 		input peek = Character escape ifTrue: [
@@ -109,13 +125,14 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 				[#escape] -> [
 					sequence := input upToAnyOf: #($; $m).
 					"color"
+					
 					"TODO: weitere Attribute mit ; getrennt beachten!"
 					sequence = '[01' ifTrue: [
-						color := self colorFrom: (input upTo: $m).
+						foreGround := self colorFrom: (input upTo: $m).
 						state := prevState].
 					"reset all attributes"
 					(sequence = '[00' or: sequence = '[0') ifTrue: [
-						color := TextColor black.
+						foreGround := TextColor black.
 						state := prevState].
 					"set title"
 					sequence = ']0' ifTrue: [ | title |
@@ -127,16 +144,16 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 					sequence = '[80' ifTrue: [state := #output]].
 				[#output] -> [
 					output append: ((input upTo: Character escape) asText
-						addAttribute: color;
+						addAttribute: foreGround;
 						addAttribute: (TextFontReference toFont: TextStyle defaultFixedFont)).
 					prevState := state.
-					state := #escape].
+					input atEnd ifFalse: [state := #escape]].
 				[#ps1] -> [
 					ps1 append: ((input upTo: Character escape) asText
-						addAttribute: color;
+						addAttribute: foreGround;
 						addAttribute: (TextFontReference toFont: TextStyle defaultFixedFont)).
 					prevState := state.
-					state := #escape]}
+					input atEnd ifFalse: [state := #escape]]}
 			otherwise: [input next]]
 ]
 
