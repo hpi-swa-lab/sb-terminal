@@ -47,7 +47,6 @@ SBBashTerminal >> initialize [
 	super initialize.
 	
 	self
-		addMorphBack: (SBButton new onClick: [self startREPL]);
 		addMorphBack: (commandBlocks := SBBlock new
 			changeTableLayout;
 			listDirection: #topToBottom;
@@ -102,7 +101,6 @@ SBBashTerminal >> readDataFromBash [
 	ps1 := '' asText.
 	output := '' asText.
 	self readFrom: buf asString readStream writeInto: ps1 and: output.
-	Transcript showln: buf asString.
 	ps1 = '' ifFalse: [ | newCommandBlock |
 		commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
 		newCommandBlock ps1: ps1].
@@ -112,7 +110,7 @@ SBBashTerminal >> readDataFromBash [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 
-	| sequence prevState foreGround |
+	| sequence foreGround prevState |
 	foreGround := TextColor black.
 	"TODO: escape code lesen als eigene Methode und dann direkt hinter state = #output oder #ps1 aufrufen statt eigenen State dafür zu machen"
 	[input atEnd] whileFalse: [
@@ -141,19 +139,26 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 					"set ps1"
 					sequence = '[81' ifTrue: [state := #ps1].
 					"set output"
-					sequence = '[80' ifTrue: [state := #output]].
+					sequence = '[80' ifTrue: [state := #output].
+					"don't set anything"
+					sequence = '[82' ifTrue: [state := #hidden]].
 				[#output] -> [
 					output append: ((input upTo: Character escape) asText
 						addAttribute: foreGround;
 						addAttribute: (TextFontReference toFont: TextStyle defaultFixedFont)).
-					prevState := state.
-					input atEnd ifFalse: [state := #escape]].
+					input atEnd ifFalse: [
+						prevState := state.
+						state := #escape]].
 				[#ps1] -> [
 					ps1 append: ((input upTo: Character escape) asText
 						addAttribute: foreGround;
 						addAttribute: (TextFontReference toFont: TextStyle defaultFixedFont)).
-					prevState := state.
-					input atEnd ifFalse: [state := #escape]]}
+					input atEnd ifFalse: [
+						prevState := state.
+						state := #escape]].
+				[#hidden] -> [
+					input upToEnd.
+					state := #output]}
 			otherwise: [input next]]
 ]
 
@@ -167,4 +172,16 @@ SBBashTerminal >> startREPL [
 			input := UIManager default request: 'input'.
 			pty nextPutAll: input.
 			pty nextPut: Character return] doWhileFalse: [input isEmpty]] fork
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> state [
+
+	^ state
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> state: aSymbol [
+
+	state := aSymbol
 ]
