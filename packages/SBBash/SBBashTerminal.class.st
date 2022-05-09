@@ -101,10 +101,11 @@ SBBashTerminal >> readDataFromBash [
 	ps1 := '' asText.
 	output := '' asText.
 	self readFrom: buf asString readStream writeInto: ps1 and: output.
-	ps1 = '' ifFalse: [ | newCommandBlock |
+	((commandBlocks submorphs size = 0) not and: (output = '') not) ifTrue: [Project current addDeferredUIMessage: [commandBlocks lastSubmorph output: output]].
+	(ps1 = '') not ifTrue: [ | newCommandBlock |
 		commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
-		newCommandBlock ps1: ps1].
-	commandBlocks submorphs size = 0 ifFalse: [Project current addDeferredUIMessage: [commandBlocks lastSubmorph output: output]]
+		newCommandBlock ps1: ps1.
+		newCommandBlock focus]
 ]
 
 { #category : #'as yet unclassified' }

@@ -10,22 +10,27 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SBBashCommandBlock >> focus [
+
+	input startInputAtEnd
+]
+
+{ #category : #'as yet unclassified' }
 SBBashCommandBlock >> initialize [
 
 	super initialize.
 	self
 		addMorphBack: (SBRow new
 			changeTableLayout;
-			addMorphBack: (ps1 := SBTextBubble multiLine vResizing: #shrinkWrap);
+			addMorphBack: (ps1 := SBBashFormattedTextBubble multiLine
+				vResizing: #shrinkWrap;
+				focusable: false);
 			addMorphBack: (input := SBBashInputTextBubble multiLine
 				placeholderText: 'type here';
 				hResizing: #spaceFill;
 				vResizing: #spaceFill);
 			hResizing: #spaceFill;
 			cellGap: 2);
-		addMorphBack: (output := SBTextBubble multiLine
-			hResizing: #spaceFill;
-			vResizing: #shrinkWrap);
 		cellGap: 2;
 		hResizing: #spaceFill;
 		vResizing: #shrinkWrap;
@@ -41,6 +46,10 @@ SBBashCommandBlock >> output [
 { #category : #'as yet unclassified' }
 SBBashCommandBlock >> output: aString [
 
+	output isNil ifTrue: (self addMorphBack: (output := SBBashFormattedTextBubble multiLine
+		hResizing: #spaceFill;
+		vResizing: #shrinkWrap;
+		focusable: true)).
 	output contents: output contents asText, aString
 ]
 
