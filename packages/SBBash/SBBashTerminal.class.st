@@ -113,7 +113,7 @@ SBBashTerminal >> readDataFromBash [
 	(ps1 = '') not ifTrue: [ | newCommandBlock |
 		commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
 		newCommandBlock ps1: ps1.
-		newCommandBlock focus]
+		Project current addDeferredUIMessage: [newCommandBlock focus]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -166,7 +166,7 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 						prevState := state.
 						state := #escape]].
 				[#hidden] -> [
-					input upToEnd.
+					input upTo: Character return.
 					state := #output]}
 			otherwise: [input next]]
 ]

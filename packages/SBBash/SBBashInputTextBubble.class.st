@@ -9,7 +9,6 @@ SBBashInputTextBubble >> keyStroke: anEvent [
 
 	anEvent keyCharacter = Character return
 		ifTrue: [ | pty terminal |
-			"TODO: Tom fragen, wie man das macht"
 			terminal := self containingArtefact.
 			pty := terminal pty.
 			"next command should not be printed"
@@ -25,12 +24,12 @@ SBBashInputTextBubble >> suggestions [
 	| current command suggestionTexts suggestions methodOrNil manpage |
 	command := (self contents subStrings: ' ') first.
 	current := (self contents subStrings: ' ') last.
-	suggestionTexts := Set new.
+	suggestionTexts := OrderedCollection new.
 	
 	methodOrNil := SBBashManpageHolder class methodDictionary
 		at: command asSymbol
 		ifAbsent: [nil].
-	methodOrNil isNil not ifTrue: [ | index |
+	methodOrNil notNil ifTrue: [ | index |
 		manpage := methodOrNil decompileString.
 		index := 0.
 		[
