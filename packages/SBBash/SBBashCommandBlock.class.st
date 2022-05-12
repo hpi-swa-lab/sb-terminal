@@ -31,6 +31,11 @@ SBBashCommandBlock >> initialize [
 				vResizing: #spaceFill);
 			hResizing: #spaceFill;
 			cellGap: 2);
+		addMorphBack: (output := SBBashFormattedTextBubble multiLine
+			hResizing: #spaceFill;
+			vResizing: #shrinkWrap;
+			focusable: true;
+			visible: false);
 		cellGap: 2;
 		hResizing: #spaceFill;
 		vResizing: #shrinkWrap;
@@ -46,10 +51,7 @@ SBBashCommandBlock >> output [
 { #category : #'as yet unclassified' }
 SBBashCommandBlock >> output: aString [
 
-	output isNil ifTrue: (self addMorphBack: (output := SBBashFormattedTextBubble multiLine
-		hResizing: #spaceFill;
-		vResizing: #shrinkWrap;
-		focusable: true)).
+	output visible ifFalse: (output visible: true).
 	output contents: output contents asText, aString
 ]
 
