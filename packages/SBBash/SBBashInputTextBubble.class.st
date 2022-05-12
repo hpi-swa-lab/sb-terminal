@@ -21,22 +21,27 @@ SBBashInputTextBubble >> keyStroke: anEvent [
 { #category : #'as yet unclassified' }
 SBBashInputTextBubble >> suggestions [
 
-	| current command suggestionTexts suggestions methodOrNil manpage |
+	| current command suggestionTexts suggestions manpage |
 	command := (self contents subStrings: ' ') first.
 	current := (self contents subStrings: ' ') last.
 	suggestionTexts := OrderedCollection new.
 	
-	methodOrNil := SBBashManpageHolder class methodDictionary
-		at: command asSymbol
-		ifAbsent: [nil].
-	methodOrNil notNil ifTrue: [ | index |
-		manpage := methodOrNil decompileString.
-		index := 0.
-		[
-			index := index + 1.
-			index := manpage findString: current startingAt: index.
-			index = 0 ifFalse: [suggestionTexts add: '...', ((manpage from: (index max: 1) to: (index + 100 min: manpage size)), '...')]] doWhileFalse: [index = 0]].
+	manpage := UnixProcess thisOSProcess waitForCommandOutput: 'cd ../manpages; ./create_manpage_completions.py ', command, '.1.gz -s'.
+	manpage linesDo: [:line |
+		"in each line: parse the line by searching flags and descriptions
+example line for command ls -b:
+complete -c ls -s b -l escape -d 'print C-style escapes for nongraphic characters'"
+		"TODO: wenn -a da steht, suche auch nach a"
+		(line findString: current) > 0 ifTrue: [ | descIndex flagIndex |
+			flagIndex := (line findString: ' -s ') + 4.
+			flagIndex > 0 ifFalse: [flagIndex := (line findString: ' -l ') + 4].
+			descIndex := (line findString: ' -d ') + 4.
+			(descIndex > 4 and: flagIndex > 4) ifTrue: [ | description flagEndIndex flag |
+				description := line from: descIndex.
+				flagEndIndex := (line findString: '-' startingAt: flagIndex) - 1.
+				flag := line from: flagIndex to: flagEndIndex.
+				suggestionTexts add: '-', flag, (': ', description)]]].
 	
-	suggestions := (suggestionTexts collect: [:text | SBSuggestionItem selector: text label: command]) asArray.
+	suggestions := (suggestionTexts collect: [:text | SBSuggestionItem selector: text label: command, (' ', current)]) asArray.
 	^ suggestions
 ]
