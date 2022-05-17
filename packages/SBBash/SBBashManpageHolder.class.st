@@ -900,3 +900,25 @@ SEE ALSO
 GNU coreutils 8.30              September 2019                           LS(1)
 '
 ]
+
+{ #category : #'as yet unclassified' }
+SBBashManpageHolder class >> wcJSON [
+
+	^ STON fromString: '{ 
+		"options": [{
+			"long": "bytes", 
+			"short": "c", 
+			"description": "print the byte counts"
+		},
+		{
+			"long": "chars", 
+			"short": "m", 
+			"description": "print the character counts"
+		},
+		{
+			"long": "lines", 
+			"short": "l", 
+			"description": "print the newline counts"
+		}]
+	 }'.
+]

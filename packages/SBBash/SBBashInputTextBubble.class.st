@@ -1,6 +1,9 @@
 Class {
 	#name : #SBBashInputTextBubble,
 	#superclass : #SBTextBubble,
+	#instVars : [
+		'terminal'
+	],
 	#category : #SBBash
 }
 
@@ -21,12 +24,38 @@ SBBashInputTextBubble >> keyStroke: anEvent [
 { #category : #'as yet unclassified' }
 SBBashInputTextBubble >> suggestions [
 
+	| current command suggestionTexts suggestions manpageInfo flagIndex manpage |
+	flagIndex := self contents findString: ' -'.
+	flagIndex > 0
+		ifTrue: [command := self contents from: 1 to: flagIndex - 1]
+		ifFalse: [command := self contents].
+	current := (self contents subStrings: ' ') last.
+	suggestionTexts := OrderedCollection new.
+	
+	"TODO: Command Klasse hat Subcommands vom Type Command, opts (flags) und description"
+	
+	manpage := UnixProcess thisOSProcess waitForCommandOutput: 'cd ../manpages; ./create_manpage_completions.py -f "', command, '"'.
+	manpage = '' ifTrue: [^ #()].
+	manpageInfo := STON fromString: manpage.
+	(manpageInfo at: #options) do: [:option | | flags description flagsSpread |
+		description := option at: #description.
+		flags := option at: #flags.
+		flagsSpread := flags joinSeparatedBy: ', '.
+		((flagsSpread findString: current) > 0 or: (description findString: current) > 0) ifTrue: [suggestionTexts add: flagsSpread, ': ', description]].
+	
+	suggestions := (suggestionTexts collect: [:text | SBSuggestionItem selector: text label: command]) asArray.
+	^ suggestions
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInputTextBubble >> suggestions2 [
+
 	| current command suggestionTexts suggestions manpage |
 	command := (self contents subStrings: ' ') first.
 	current := (self contents subStrings: ' ') last.
 	suggestionTexts := OrderedCollection new.
 	
-	manpage := UnixProcess thisOSProcess waitForCommandOutput: 'cd ../manpages; ./create_manpage_completions.py ', command, '.1.gz -s'.
+	manpage := UnixProcess thisOSProcess waitForCommandOutput: 'cd ../manpages; ./create_manpage_completions.py /usr/share/man/man1/', command, '.1.gz -s'.
 	manpage linesDo: [:line |
 		"in each line: parse the line by searching flags and descriptions
 example line for command ls -b:
@@ -44,4 +73,16 @@ complete -c ls -s b -l escape -d 'print C-style escapes for nongraphic character
 	
 	suggestions := (suggestionTexts collect: [:text | SBSuggestionItem selector: text label: command, (' ', current)]) asArray.
 	^ suggestions
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInputTextBubble >> terminal [
+
+	^ terminal
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInputTextBubble >> terminal: anObject [
+
+	terminal := anObject
 ]
