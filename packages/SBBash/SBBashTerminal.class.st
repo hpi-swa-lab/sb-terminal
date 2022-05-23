@@ -3,6 +3,7 @@ Class {
 	#superclass : #SBBlock,
 	#instVars : [
 		'commandBlocks',
+		'commands',
 		'pty',
 		'closed',
 		'state'
@@ -30,6 +31,18 @@ SBBashTerminal >> colorFrom: parameter [
 	parameter = '96' ifTrue: [^ TextColor cyan].
 	parameter = '97' ifTrue: [^ TextColor white].
 	^ TextColor black
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> commands [
+
+	^ commands
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> commands: anObject [
+
+	commands := anObject
 ]
 
 { #category : #'as yet unclassified' }
@@ -62,6 +75,7 @@ SBBashTerminal >> initialize [
 		changeTableLayout;
 		layoutInset: 4.
 	
+	commands := OrderedCollection new.
 	self launchBash
 ]
 
