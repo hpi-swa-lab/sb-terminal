@@ -11,15 +11,25 @@ Class {
 { #category : #'as yet unclassified' }
 SBBashInputTextBubble >> keyStroke: anEvent [
 
-	anEvent keyCharacter = Character return
-		ifTrue: [ | pty terminal |
-			terminal := self containingArtefact.
-			pty := terminal pty.
-			"next command should not be printed"
-			terminal state: #hidden.
-			pty nextPutAll: self contents.
-			pty nextPut: Character return]
-		ifFalse: [super keyStroke: anEvent]
+	anEvent keyCharacter
+		caseOf: {
+			[Character return] -> [ | pty |
+				pty := self terminal pty.
+				"next command should not be printed"
+				self terminal state: #hidden.
+				pty nextPutAll: self contents.
+				pty nextPut: Character return].
+			[Character tab] -> [ | pty |
+				pty := self terminal pty.
+				self terminal state: #autocomplete.
+				pty nextPutAll: self contents.
+				pty nextPut: Character tab.
+				(1 to: 20) do: [:e | pty nextPut: Character backspace]
+				"TODO: in pty output clearen! (ctrl + U?)"
+				"state auf autocomplete
+den dann Output als aktuellen Content setzen
+und dann Character ctrl + U an pty senden???"]}
+		otherwise: [super keyStroke: anEvent]
 ]
 
 { #category : #'as yet unclassified' }

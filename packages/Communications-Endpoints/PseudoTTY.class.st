@@ -157,21 +157,16 @@ PseudoTTY >> name [
 PseudoTTY >> nextPut: aCharacterOrInteger [
 	"Send a single character to the stdin of my subprocess."
 
-	fileHandle isNil ifTrue: [^self].
+	fileHandle isNil ifTrue: [^ self].
 	outputBuffer at: 1 put: aCharacterOrInteger asInteger.
-	self
-		primWriteStart: fileHandle
-		fPosition: -1
-		fromBuffer: outputBuffer
-		at: 1
-		count: 1
+	self primWriteStart: fileHandle fPosition: -1 fromBuffer: outputBuffer at: 1 count: 1
 ]
 
 { #category : #'input/output' }
 PseudoTTY >> nextPutAll: aStringOrByteArray [
 	"Send an entire string to the stdin of my subprocess."
 
-	fileHandle isNil ifTrue: [^self].
+	fileHandle isNil ifTrue: [^ self].
 	self
 		primWriteStart: fileHandle
 		fPosition: -1

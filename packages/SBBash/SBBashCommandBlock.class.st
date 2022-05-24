@@ -43,6 +43,18 @@ SBBashCommandBlock >> initialize [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashCommandBlock >> input [
+
+	^ input contents
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandBlock >> input: aString [
+
+	input contents: input contents, aString
+]
+
+{ #category : #'as yet unclassified' }
 SBBashCommandBlock >> output [
 
 	^ output contents

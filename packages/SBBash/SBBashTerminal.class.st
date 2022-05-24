@@ -46,6 +46,12 @@ SBBashTerminal >> commands: anObject [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashTerminal >> currentCommandBlock [
+
+	^ commandBlocks lastSubmorph
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTerminal >> example [
 
 	SBMorphExample
@@ -88,13 +94,14 @@ SBBashTerminal >> isArtefact [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> launchBash [
 
+	| process |
 	(pty := PseudoTTY command: '/bin/bash' arguments: {'-i'}) isNil ifTrue: [^ self error: 'could not create process'].
 	
 	closed := false.
 	pty nextPutAll: 'PS1="\e[81m${PS1}\e[80m"'.
 	pty nextPut: Character return.
 	state := #initial.
-	[[self readDataFromBash] doWhileFalse: [closed]] fork
+	process := [[self readDataFromBash] doWhileFalse: [closed]] fork
 ]
 
 { #category : #'as yet unclassified' }
@@ -121,9 +128,7 @@ SBBashTerminal >> readDataFromBash [
 	ps1 := '' asText.
 	output := '' asText.
 	self readFrom: buf asString readStream writeInto: ps1 and: output.
-	((commandBlocks submorphs size = 0) not and: (output = '') not) ifTrue: [ | currentOutput |
-		currentOutput := commandBlocks lastSubmorph.
-		Project current addDeferredUIMessage: [currentOutput output: output]].
+	((commandBlocks submorphs size = 0) not and: (output = '') not) ifTrue: [Project current addDeferredUIMessage: [self currentCommandBlock output: output]].
 	(ps1 = '') not ifTrue: [ | newCommandBlock |
 		commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
 		newCommandBlock ps1: ps1.
@@ -179,6 +184,20 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 					input atEnd ifFalse: [
 						prevState := state.
 						state := #escape]].
+				[#autocomplete] -> [
+					"This is the part the user wrote"
+					(input upTo: Character return) size.
+					state := #autocomplete2].
+				[#autocomplete2] -> [ | toBeDeleted |
+					"This is the part we autocomplete"
+					Transcript showln: self currentCommandBlock input.
+					self currentCommandBlock input: (input upTo: Character backspace).
+					toBeDeleted := self currentCommandBlock input size.
+					Transcript showln: toBeDeleted.
+					Transcript showln: self currentCommandBlock input.
+					(1 to: toBeDeleted) do: [:e | pty nextPut: Character backspace].
+					"TODO: Cursor an die letzte Position"
+					state := #output].
 				[#hidden] -> [
 					input upTo: Character return.
 					state := #output]}
