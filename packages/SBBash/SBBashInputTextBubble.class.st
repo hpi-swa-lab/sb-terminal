@@ -9,8 +9,17 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SBBashInputTextBubble >> absorbsInput: anEvent [
+	"Wenn suggestions da sind, will ich da reinnavigieren
+Wenn ich Shift halte, will ich mit ArrowUp den Focus wechseln"
+
+	^ true
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInputTextBubble >> keyStroke: anEvent [
 
+	Transcript showln: self suggestions.
 	anEvent keyCharacter
 		caseOf: {
 			[Character return] -> [ | pty |
@@ -20,65 +29,52 @@ SBBashInputTextBubble >> keyStroke: anEvent [
 				pty nextPutAll: self contents.
 				pty nextPut: Character return].
 			[Character tab] -> [ | pty |
-				pty := self terminal pty.
-				self terminal state: #autocomplete.
-				pty nextPutAll: self contents.
-				pty nextPut: Character tab.
-				(1 to: 20) do: [:e | pty nextPut: Character backspace]
-				"TODO: in pty output clearen! (ctrl + U?)"
-				"state auf autocomplete
-den dann Output als aktuellen Content setzen
-und dann Character ctrl + U an pty senden???"]}
+				self suggestions
+					ifNotEmpty: [self sandblockEditor suggestionMenu useSuggestion]
+					ifEmpty: [
+						pty := self terminal pty.
+						self terminal state: #autocomplete.
+						pty nextPutAll: self contents.
+						pty nextPut: Character tab
+						"TODO: in pty output clearen! (ctrl + U?)"]]}
 		otherwise: [super keyStroke: anEvent]
 ]
 
 { #category : #'as yet unclassified' }
-SBBashInputTextBubble >> loadManpageFor: commandString into: collection [
+SBBashInputTextBubble >> loadManpageFor: fullCommandString into: collection [
 
 	| manpage command |
+	fullCommandString = '' ifTrue: [^ nil].
 	command := self terminal commands
-		detect: [:c | c commandString = commandString]
+		detect: [:c | c commandString = fullCommandString]
 		ifNone: [].
 	command isNil
-		ifTrue: [ | options |
-			manpage := UnixProcess thisOSProcess waitForCommandOutput: 'cd ../manpages; ./create_manpage_completions.py -f "', commandString, '"'.
+		ifTrue: [ | suggestions commandString |
+			manpage := UnixProcess thisOSProcess waitForCommandOutput: 'cd ../manpages; ./create_manpage_completions.py -f "', fullCommandString, '"'.
 			manpage = '' ifTrue: [^ nil].
-			options := (self optionsFromManpage: manpage into: collection).
+			commandString := fullCommandString from: 1 to: fullCommandString lastSpacePosition.
+			suggestions := self optionsFromManpage: manpage withCommand: commandString into: collection.
 			self terminal commands add: (SBBashCommand new
-				commandString: commandString;
-				options: options)]
-		ifFalse: [self optionsFromCommand: command into: collection]
+				commandString: fullCommandString;
+				options: suggestions)]
+		ifFalse: [self suggestionsFrom: command options withCommand: fullCommandString into: collection]
 ]
 
 { #category : #'as yet unclassified' }
-SBBashInputTextBubble >> optionsFromCommand: command into: collection [
-
-	command options do: [:option | | flags description flagsSpread |
-		description := option at: #description.
-		flags := option at: #flags.
-		flagsSpread := flags joinSeparatedBy: ', '.
-		((flagsSpread findString: current) > 0 or: (description findString: current) > 0) ifTrue: [collection add: flagsSpread, ': ', description]]
-]
-
-{ #category : #'as yet unclassified' }
-SBBashInputTextBubble >> optionsFromManpage: manpage into: collection [
+SBBashInputTextBubble >> optionsFromManpage: manpage withCommand: command into: collection [
 
 	| ston options |
 	ston := STON fromString: manpage.
 	options := ston at: #options.
-	options do: [:option | | flags description flagsSpread |
-		description := option at: #description.
-		flags := option at: #flags.
-		flagsSpread := flags joinSeparatedBy: ', '.
-		((flagsSpread findString: current) > 0 or: (description findString: current) > 0) ifTrue: [collection add: flagsSpread, ': ', description]].
-
+	self suggestionsFrom: options withCommand: command into: collection.
+	
 	^ options
 ]
 
 { #category : #'as yet unclassified' }
 SBBashInputTextBubble >> suggestions [
 
-	| command suggestionTexts suggestions flagIndex |
+	| command suggestions flagIndex |
 	flagIndex := self contents findString: ' -'.
 	"Find full command (everything before any flag)"
 	flagIndex > 0
@@ -88,7 +84,7 @@ SBBashInputTextBubble >> suggestions [
 	self contents lastSpacePosition = self contents size
 		ifTrue: [current := '-']
 		ifFalse: [current := (self contents subStrings: ' ') last].
-	suggestionTexts := OrderedCollection new.
+	suggestions := OrderedCollection new.
 	"TODO: add suggestions for subcommands?"
 	"TODO: Command Klasse hat Subcommands vom Type Command, opts (flags) und description
  und das terminal hat eine Collection von diesen Commands"
@@ -98,9 +94,8 @@ SBBashInputTextBubble >> suggestions [
 	"wenn ja, gibt es schon den Subcommand (ls)?"
 	"alle options hinzufügen"
 	"options durchsuchen"
-	self loadManpageFor: command into: suggestionTexts.
+	self loadManpageFor: command into: suggestions.
 	
-	suggestions := (suggestionTexts collect: [:text | SBSuggestionItem selector: text label: command]) asArray.
 	^ suggestions
 ]
 
@@ -133,6 +128,22 @@ complete -c ls -s b -l escape -d 'print C-style escapes for nongraphic character
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInputTextBubble >> suggestionsFrom: options withCommand: command into: collection [
+
+	options do: [:option | | flags description flagsJoined firstFlag suggestionText |
+		description := option at: #description.
+		flags := option at: #flags.
+		firstFlag := flags first.
+		flagsJoined := flags joinSeparatedBy: ', '.
+		suggestionText := flagsJoined, ': ', description.
+		((flagsJoined findString: current) > 0 or: (description findString: current) > 0) ifTrue: [
+			collection add: (SBBashSuggestionItem
+				selector: suggestionText
+				label: command, firstFlag
+				flag: firstFlag)]]
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInputTextBubble >> terminal [
 
 	^ self containingArtefact
@@ -142,4 +153,12 @@ SBBashInputTextBubble >> terminal [
 SBBashInputTextBubble >> terminal: anObject [
 
 	terminal := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInputTextBubble >> useSuggestion: anItem [
+
+	self contents: anItem label
+	"self sandblockEditor suggestionMenu activeItem flag"
+	"self suggestions first flag"
 ]
