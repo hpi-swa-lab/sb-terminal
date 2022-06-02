@@ -9,7 +9,7 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
-SBBashInputTextBubble >> absorbsInput: anEvent [
+SBBashInputTextBubble >> absorbsInput2: anEvent [
 	"Wenn suggestions da sind, will ich da reinnavigieren
 Wenn ich Shift halte, will ich mit ArrowUp den Focus wechseln"
 
@@ -19,7 +19,6 @@ Wenn ich Shift halte, will ich mit ArrowUp den Focus wechseln"
 { #category : #'as yet unclassified' }
 SBBashInputTextBubble >> keyStroke: anEvent [
 
-	Transcript showln: self suggestions.
 	anEvent keyCharacter
 		caseOf: {
 			[Character return] -> [ | pty |
@@ -29,6 +28,7 @@ SBBashInputTextBubble >> keyStroke: anEvent [
 				pty nextPutAll: self contents.
 				pty nextPut: Character return].
 			[Character tab] -> [ | pty |
+				"self suggestions"
 				self suggestions
 					ifNotEmpty: [self sandblockEditor suggestionMenu useSuggestion]
 					ifEmpty: [
@@ -74,7 +74,10 @@ SBBashInputTextBubble >> optionsFromManpage: manpage withCommand: command into: 
 { #category : #'as yet unclassified' }
 SBBashInputTextBubble >> suggestions [
 
-	| command suggestions flagIndex |
+	| command suggestions flagIndex containsSpace |
+	suggestions := OrderedCollection new.
+	containsSpace := (self contents findString: ' ') > 0.
+	containsSpace ifFalse: [^ suggestions].
 	flagIndex := self contents findString: ' -'.
 	"Find full command (everything before any flag)"
 	flagIndex > 0
@@ -84,7 +87,6 @@ SBBashInputTextBubble >> suggestions [
 	self contents lastSpacePosition = self contents size
 		ifTrue: [current := '-']
 		ifFalse: [current := (self contents subStrings: ' ') last].
-	suggestions := OrderedCollection new.
 	"TODO: add suggestions for subcommands?"
 	"TODO: Command Klasse hat Subcommands vom Type Command, opts (flags) und description
  und das terminal hat eine Collection von diesen Commands"
@@ -133,14 +135,13 @@ SBBashInputTextBubble >> suggestionsFrom: options withCommand: command into: col
 	options do: [:option | | flags description flagsJoined firstFlag suggestionText |
 		description := option at: #description.
 		flags := option at: #flags.
-		firstFlag := flags first.
+		flags ifNotEmpty: [firstFlag := flags first] ifEmpty: [firstFlag := ''].
 		flagsJoined := flags joinSeparatedBy: ', '.
 		suggestionText := flagsJoined, ': ', description.
 		((flagsJoined findString: current) > 0 or: (description findString: current) > 0) ifTrue: [
-			collection add: (SBBashSuggestionItem
-				selector: suggestionText
-				label: command, firstFlag
-				flag: firstFlag)]]
+			collection add: ((SBBashSuggestionItem selector: suggestionText label: command, firstFlag)
+				option: firstFlag;
+				command: command)]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -158,7 +159,7 @@ SBBashInputTextBubble >> terminal: anObject [
 { #category : #'as yet unclassified' }
 SBBashInputTextBubble >> useSuggestion: anItem [
 
-	self contents: anItem label
+	self contents: anItem command, (' ', anItem option)
 	"self sandblockEditor suggestionMenu activeItem flag"
 	"self suggestions first flag"
 ]

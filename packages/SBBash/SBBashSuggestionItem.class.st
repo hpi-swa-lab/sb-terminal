@@ -2,34 +2,32 @@ Class {
 	#name : #SBBashSuggestionItem,
 	#superclass : #SBSuggestionItem,
 	#instVars : [
-		'flag'
+		'option',
+		'command'
 	],
 	#category : #SBBash
 }
 
 { #category : #'as yet unclassified' }
-SBBashSuggestionItem class >> selector: aSymbol label: aLabelString flag: aFlagString [
+SBBashSuggestionItem >> command [
 
-	^ self new
-		selector: aSymbol label: aLabelString flag: aFlagString;
-		yourself
+	^ command
 ]
 
 { #category : #'as yet unclassified' }
-SBBashSuggestionItem >> flag [
+SBBashSuggestionItem >> command: anObject [
 
-	^ flag
+	command := anObject
 ]
 
 { #category : #'as yet unclassified' }
-SBBashSuggestionItem >> flag: aString [
+SBBashSuggestionItem >> option [
 
-	flag := aString
+	^ option
 ]
 
 { #category : #'as yet unclassified' }
-SBBashSuggestionItem >> selector: aSelectorString label: aLabelString flag: aFlagString [
+SBBashSuggestionItem >> option: aString [
 
-	super selector: aSelectorString label: aLabelString.
-	flag := aFlagString
+	option := aString
 ]
