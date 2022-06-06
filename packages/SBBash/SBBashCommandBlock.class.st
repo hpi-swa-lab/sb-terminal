@@ -10,6 +10,13 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SBBashCommandBlock >> addInput: aString [
+
+	input contents: input contents, aString.
+	self moveCursorToEnd
+]
+
+{ #category : #'as yet unclassified' }
 SBBashCommandBlock >> focus [
 
 	input startInputAtEnd
@@ -51,7 +58,14 @@ SBBashCommandBlock >> input [
 { #category : #'as yet unclassified' }
 SBBashCommandBlock >> input: aString [
 
-	input contents: input contents, aString
+	input contents: aString.
+	self moveCursorToEnd
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandBlock >> inputBlock [
+
+	^ input
 ]
 
 { #category : #'as yet unclassified' }

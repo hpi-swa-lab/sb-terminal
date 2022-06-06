@@ -122,15 +122,11 @@ SBBashTextBubble >> readFrom: input writeInto: output [
 	| state sequence color |
 	state := #read.
 	color := TextColor black.
-	SBToggledCode comment: '' active: 1 do: {
-		[
-			Transcript showln: 'stream: '.
-			Transcript show: input contents].
-		[output append: input upToEnd]}.
 	[input atEnd] whileFalse: [
 		state = #escape ifTrue: [
 			sequence := input upToAnyOf: #($; $m).
 			"color"
+			
 			sequence = '[01' ifTrue: [
 				color := self colorFrom: (input upTo: $m).
 				state := #read].

@@ -12,25 +12,29 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
-SBBashTerminal >> colorFrom: parameter [
+SBBashTerminal >> attributesFrom: aString [
 
-	parameter = '30' ifTrue: [^ TextColor black].
-	parameter = '31' ifTrue: [^ TextColor red].
-	parameter = '32' ifTrue: [^ TextColor green].
-	parameter = '33' ifTrue: [^ TextColor yellow].
-	parameter = '34' ifTrue: [^ TextColor blue].
-	parameter = '35' ifTrue: [^ TextColor magenta].
-	parameter = '36' ifTrue: [^ TextColor cyan].
-	parameter = '37' ifTrue: [^ TextColor white].
-	parameter = '90' ifTrue: [^ TextColor gray].
-	parameter = '91' ifTrue: [^ TextColor red].
-	parameter = '92' ifTrue: [^ TextColor green].
-	parameter = '93' ifTrue: [^ TextColor yellow].
-	parameter = '94' ifTrue: [^ TextColor blue].
-	parameter = '95' ifTrue: [^ TextColor magenta].
-	parameter = '96' ifTrue: [^ TextColor cyan].
-	parameter = '97' ifTrue: [^ TextColor white].
-	^ TextColor black
+	(aString = '' or: (aString = '0' or: aString = '00')) ifTrue: [^ OrderedCollection newFrom: {TextColor black}].
+	^ (aString findTokens: $;) collect: [:attribute |
+		attribute
+			caseOf: {
+				[#'30'] -> [TextColor black].
+				[#'31'] -> [TextColor red].
+				[#'32'] -> [TextColor green].
+				[#'33'] -> [TextColor yellow].
+				[#'34'] -> [TextColor blue].
+				[#'35'] -> [TextColor magenta].
+				[#'36'] -> [TextColor cyan].
+				[#'37'] -> [TextColor white].
+				[#'97'] -> [TextColor white].
+				[#'96'] -> [TextColor cyan].
+				[#'95'] -> [TextColor magenta].
+				[#'94'] -> [TextColor blue].
+				[#'93'] -> [TextColor yellow].
+				[#'92'] -> [TextColor green].
+				[#'91'] -> [TextColor red].
+				[#'90'] -> [TextColor black]}
+			otherwise: [TextColor black]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -49,6 +53,21 @@ SBBashTerminal >> commands: anObject [
 SBBashTerminal >> currentCommandBlock [
 
 	^ commandBlocks lastSubmorph
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> evaluateEscapeSequence: sequence prevState: prevState [
+	"set title"
+
+	(sequence upTo: $;) = ']0' ifTrue: [ | title |
+		title := sequence upTo: (Character value: 7).
+		state := prevState].
+	"set ps1"
+	sequence = ']81' ifTrue: [state := #ps1].
+	"set output"
+	sequence = ']80' ifTrue: [state := #output].
+	"don't set anything"
+	sequence = ']82' ifTrue: [state := #hidden]
 ]
 
 { #category : #'as yet unclassified' }
@@ -98,9 +117,9 @@ SBBashTerminal >> launchBash [
 	(pty := PseudoTTY command: '/bin/bash' arguments: {'-i'}) isNil ifTrue: [^ self error: 'could not create process'].
 	
 	closed := false.
-	pty nextPutAll: 'PS1="\e[81m${PS1}\e[80m"'.
+	pty nextPutAll: 'PS1="\e]81m${PS1}\e]80m"'.
 	pty nextPut: Character return.
-	state := #initial.
+	state := #output.
 	process := [[self readDataFromBash] doWhileFalse: [closed]] fork
 ]
 
@@ -129,75 +148,61 @@ SBBashTerminal >> readDataFromBash [
 	output := '' asText.
 	self readFrom: buf asString readStream writeInto: ps1 and: output.
 	((commandBlocks submorphs size = 0) not and: (output = '') not) ifTrue: [Project current addDeferredUIMessage: [self currentCommandBlock output: output]].
-	(ps1 = '') not ifTrue: [ | newCommandBlock |
-		commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
-		newCommandBlock ps1: ps1.
-		Project current addDeferredUIMessage: [newCommandBlock focus]]
+	(ps1 = '') not ifTrue: [
+		Project current addDeferredUIMessage: [ | newCommandBlock |
+			commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
+			newCommandBlock ps1: ps1.
+			newCommandBlock focus]]
 ]
 
 { #category : #'as yet unclassified' }
 SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 
-	| sequence foreGround prevState |
-	foreGround := TextColor black.
+	| sequence attributes prevState |
+	Transcript showln: '###############'.
+	Transcript showln: input contents.
+	attributes := {TextColor black}.
 	"TODO: escape code lesen als eigene Methode und dann direkt hinter state = #output oder #ps1 aufrufen statt eigenen State dafür zu machen"
 	[input atEnd] whileFalse: [
-		input peek = Character escape ifTrue: [
-			prevState := state.
-			state := #escape.
-			input next].
+		Transcript showln: state.
 		state
 			caseOf: {
 				[#escape] -> [
-					sequence := input upToAnyOf: #($; $m).
-					"color"
-					
-					"TODO: weitere Attribute mit ; getrennt beachten!"
-					sequence = '[01' ifTrue: [
-						foreGround := self colorFrom: (input upTo: $m).
-						state := prevState].
-					"reset all attributes"
-					(sequence = '[00' or: sequence = '[0') ifTrue: [
-						foreGround := TextColor black.
-						state := prevState].
-					"set title"
-					sequence = ']0' ifTrue: [ | title |
-						title := input upTo: (Character value: 7).
-						state := prevState].
-					"set ps1"
-					sequence = '[81' ifTrue: [state := #ps1].
-					"set output"
-					sequence = '[80' ifTrue: [state := #output].
-					"don't set anything"
-					sequence = '[82' ifTrue: [state := #hidden]].
+					sequence := input upTo: $m.
+					(sequence beginsWith: '[')
+						ifTrue: [
+							"text attributes"
+							attributes := self attributesFrom: (sequence from: 2).
+							state := prevState]
+						ifFalse: [
+							"side effects"
+							(sequence beginsWith: ']0;') ifTrue: [sequence := sequence, (input upTo: (Character value: 7))].
+							self evaluateEscapeSequence: sequence prevState: prevState]].
 				[#output] -> [
 					output append: ((input upTo: Character escape) asText
-						addAttribute: foreGround;
+						addAllAttributes: attributes;
 						addAttribute: (TextFontReference toFont: TextStyle defaultFixedFont)).
 					input atEnd ifFalse: [
 						prevState := state.
 						state := #escape]].
 				[#ps1] -> [
 					ps1 append: ((input upTo: Character escape) asText
-						addAttribute: foreGround;
+						addAllAttributes: attributes;
 						addAttribute: (TextFontReference toFont: TextStyle defaultFixedFont)).
 					input atEnd ifFalse: [
 						prevState := state.
 						state := #escape]].
 				[#autocomplete] -> [
 					"This is the part the user wrote"
-					(input upTo: Character return) size.
+					self currentCommandBlock input: (input upTo: Character return).
 					state := #autocomplete2].
-				[#autocomplete2] -> [ | toBeDeleted |
+				[#autocomplete2] -> [
 					"This is the part we autocomplete"
-					Transcript showln: self currentCommandBlock input.
-					self currentCommandBlock input: (input upTo: Character backspace).
-					toBeDeleted := self currentCommandBlock input size.
-					Transcript showln: toBeDeleted.
-					Transcript showln: self currentCommandBlock input.
-					(1 to: toBeDeleted) do: [:e | pty nextPut: Character backspace].
+					self currentCommandBlock addInput: input upToEnd.
 					"TODO: Cursor an die letzte Position"
-					state := #output].
+					state := #hidden.
+					self pty nextPut: (Character value: 21).
+					self currentCommandBlock inputBlock moveCursorToEnd].
 				[#hidden] -> [
 					input upTo: Character return.
 					state := #output]}
