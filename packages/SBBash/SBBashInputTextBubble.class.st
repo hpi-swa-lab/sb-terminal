@@ -3,7 +3,8 @@ Class {
 	#superclass : #SBTextBubble,
 	#instVars : [
 		'terminal',
-		'current'
+		'current',
+		'processReturn'
 	],
 	#category : #SBBash
 }
@@ -21,12 +22,6 @@ SBBashInputTextBubble >> keyStroke: anEvent [
 
 	anEvent keyCharacter
 		caseOf: {
-			[Character return] -> [ | pty |
-				pty := self terminal pty.
-				"next command should not be printed"
-				self terminal state: #hidden.
-				pty nextPutAll: self contents.
-				pty nextPut: Character return].
 			[Character tab] -> [ | pty |
 				"self suggestions"
 				self suggestions
@@ -35,8 +30,16 @@ SBBashInputTextBubble >> keyStroke: anEvent [
 						pty := self terminal pty.
 						self terminal state: #autocomplete.
 						pty nextPutAll: self contents.
-						pty nextPut: Character tab
-						"TODO: in pty output clearen! (ctrl + U?)"]]}
+						pty nextPut: Character tab.
+						"Don't send incomplete command yet!"
+						self terminal monitorSemaphor wait]].
+			[Character return] -> [ | pty |
+				pty := self terminal pty.
+				"The command should not be printed"
+				self terminal state: #hidden.
+				Project current addDeferredUIMessage: [
+					pty nextPutAll: self contents.
+					pty nextPut: Character return]]}
 		otherwise: [super keyStroke: anEvent]
 ]
 

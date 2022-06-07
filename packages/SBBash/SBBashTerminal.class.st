@@ -6,7 +6,8 @@ Class {
 		'commands',
 		'pty',
 		'closed',
-		'state'
+		'state',
+		'monitorSemaphor'
 	],
 	#category : #SBBash
 }
@@ -60,7 +61,7 @@ SBBashTerminal >> evaluateEscapeSequence: sequence prevState: prevState [
 	"set title"
 
 	(sequence upTo: $;) = ']0' ifTrue: [ | title |
-		title := sequence upTo: (Character value: 7).
+		title := 'm', sequence upTo: (Character value: 7).
 		state := prevState].
 	"set ps1"
 	sequence = ']81' ifTrue: [state := #ps1].
@@ -101,6 +102,7 @@ SBBashTerminal >> initialize [
 		layoutInset: 4.
 	
 	commands := OrderedCollection new.
+	monitorSemaphor := Semaphore new.
 	self launchBash
 ]
 
@@ -121,6 +123,12 @@ SBBashTerminal >> launchBash [
 	pty nextPut: Character return.
 	state := #output.
 	process := [[self readDataFromBash] doWhileFalse: [closed]] fork
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> monitorSemaphor [
+
+	^ monitorSemaphor
 ]
 
 { #category : #'as yet unclassified' }
@@ -164,7 +172,6 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 	attributes := {TextColor black}.
 	"TODO: escape code lesen als eigene Methode und dann direkt hinter state = #output oder #ps1 aufrufen statt eigenen State dafür zu machen"
 	[input atEnd] whileFalse: [
-		Transcript showln: state.
 		state
 			caseOf: {
 				[#escape] -> [
@@ -178,10 +185,12 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 							"side effects"
 							(sequence beginsWith: ']0;') ifTrue: [sequence := sequence, (input upTo: (Character value: 7))].
 							self evaluateEscapeSequence: sequence prevState: prevState]].
-				[#output] -> [
-					output append: ((input upTo: Character escape) asText
-						addAllAttributes: attributes;
-						addAttribute: (TextFontReference toFont: TextStyle defaultFixedFont)).
+				[#output] -> [ | outBuffer |
+					outBuffer := input upTo: Character escape.
+					outBuffer = '' ifTrue: [
+						output append: (outBuffer asText
+							addAllAttributes: attributes;
+							addAttribute: (TextFontReference toFont: TextStyle defaultFixedFont))].
 					input atEnd ifFalse: [
 						prevState := state.
 						state := #escape]].
@@ -199,10 +208,10 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 				[#autocomplete2] -> [
 					"This is the part we autocomplete"
 					self currentCommandBlock addInput: input upToEnd.
-					"TODO: Cursor an die letzte Position"
 					state := #hidden.
 					self pty nextPut: (Character value: 21).
-					self currentCommandBlock inputBlock moveCursorToEnd].
+					self currentCommandBlock inputBlock moveCursorToEnd.
+					monitorSemaphor signal].
 				[#hidden] -> [
 					input upTo: Character return.
 					state := #output]}
