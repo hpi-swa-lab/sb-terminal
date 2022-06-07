@@ -187,7 +187,7 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 							self evaluateEscapeSequence: sequence prevState: prevState]].
 				[#output] -> [ | outBuffer |
 					outBuffer := input upTo: Character escape.
-					outBuffer = '' ifTrue: [
+					outBuffer = Character lf asString ifFalse: [
 						output append: (outBuffer asText
 							addAllAttributes: attributes;
 							addAttribute: (TextFontReference toFont: TextStyle defaultFixedFont))].
