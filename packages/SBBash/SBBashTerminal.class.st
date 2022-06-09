@@ -85,31 +85,24 @@ SBBashTerminal >> example [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> initialize [
 
-	| scroll |
 	super initialize.
 	
 	self
-		addMorphBack: (scroll := ScrollPane new
+		addMorphBack: (commandBlocks := SBBlock new
+			changeTableLayout;
+			listDirection: #topToBottom;
 			hResizing: #spaceFill;
-			vResizing: #rigid;
-			height: 150);
-		addMorphBack: (synopsisBlock := SBTextBubble multiLine);
+			vResizing: #spaceFill;
+			cellGap: 4);
 		listDirection: #leftToRight;
 		cellGap: 4;
 		hResizing: #shrinkWrap;
 		vResizing: #shrinkWrap;
 		attachDecorator: SBResizableDecorator new;
 		attachDecorator: SBForceMoveDecorator newConfigured;
-		minWidth: 600;
 		changeTableLayout;
 		layoutInset: 4.
 	
-	scroll scroller addMorphBack: (commandBlocks := SBBlock new
-		changeTableLayout;
-		listDirection: #topToBottom;
-		hResizing: #spaceFill;
-		vResizing: #spaceFill;
-		cellGap: 4).
 	commands := OrderedCollection new.
 	monitorSemaphor := Semaphore new.
 	self launchBash
@@ -260,6 +253,6 @@ SBBashTerminal >> synopsis [
 SBBashTerminal >> synopsis: aString [
 
 	Transcript showln: aString.
-	synopsisBlock contents: aString.
+	self sandblockEditor synopsisBlock contents: aString.
 	synopsis := aString
 ]
