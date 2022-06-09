@@ -78,7 +78,7 @@ SBBashCommandBlock >> output [
 { #category : #'as yet unclassified' }
 SBBashCommandBlock >> output: aString [
 
-	output visible ifFalse: (output visible: true).
+	output visible ifFalse: [output visible: true].
 	output contents: output contents asText, aString
 ]
 
@@ -91,5 +91,9 @@ SBBashCommandBlock >> ps1 [
 { #category : #'as yet unclassified' }
 SBBashCommandBlock >> ps1: aString [
 
-	ps1 contents: ps1 contents asText, aString
+	| current group |
+	ps1 contents: ps1 contents asText, aString.
+	current := ps1 contents asString.
+	group := (current from: (current findString: ':') + 1 to: current size) findTokens: '/'.
+	ps1 contents: ((group collect: [:pathPart | pathPart = group last ifTrue: [pathPart] ifFalse: [pathPart first]]) joinSeparatedBy: '/')
 ]

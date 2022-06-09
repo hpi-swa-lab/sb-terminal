@@ -7,7 +7,9 @@ Class {
 		'pty',
 		'closed',
 		'state',
-		'monitorSemaphor'
+		'monitorSemaphor',
+		'synopsis',
+		'synopsisBlock'
 	],
 	#category : #SBBash
 }
@@ -83,24 +85,31 @@ SBBashTerminal >> example [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> initialize [
 
+	| scroll |
 	super initialize.
 	
 	self
-		addMorphBack: (commandBlocks := SBBlock new
-			changeTableLayout;
-			listDirection: #topToBottom;
+		addMorphBack: (scroll := ScrollPane new
 			hResizing: #spaceFill;
-			vResizing: #shrinkWrap;
-			cellGap: 4);
+			vResizing: #rigid;
+			height: 150);
+		addMorphBack: (synopsisBlock := SBTextBubble multiLine);
+		listDirection: #leftToRight;
 		cellGap: 4;
-		hResizing: #rigid;
+		hResizing: #shrinkWrap;
 		vResizing: #shrinkWrap;
 		attachDecorator: SBResizableDecorator new;
 		attachDecorator: SBForceMoveDecorator newConfigured;
-		width: 600;
+		minWidth: 600;
 		changeTableLayout;
 		layoutInset: 4.
 	
+	scroll scroller addMorphBack: (commandBlocks := SBBlock new
+		changeTableLayout;
+		listDirection: #topToBottom;
+		hResizing: #spaceFill;
+		vResizing: #spaceFill;
+		cellGap: 4).
 	commands := OrderedCollection new.
 	monitorSemaphor := Semaphore new.
 	self launchBash
@@ -167,8 +176,6 @@ SBBashTerminal >> readDataFromBash [
 SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 
 	| sequence attributes prevState |
-	Transcript showln: '###############'.
-	Transcript showln: input contents.
 	attributes := {TextColor black}.
 	"TODO: escape code lesen als eigene Methode und dann direkt hinter state = #output oder #ps1 aufrufen statt eigenen State dafür zu machen"
 	[input atEnd] whileFalse: [
@@ -209,11 +216,12 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 					"This is the part we autocomplete"
 					self currentCommandBlock addInput: input upToEnd.
 					state := #hidden.
-					self pty nextPut: (Character value: 21).
+					pty nextPut: (Character value: 21).
 					self currentCommandBlock inputBlock moveCursorToEnd.
 					monitorSemaphor signal].
 				[#hidden] -> [
-					input upTo: Character return.
+					input upToEnd.
+					SBToggledCode comment: '' active: 0 do: {[input upTo: Character return]}.
 					state := #output]}
 			otherwise: [input next]]
 ]
@@ -240,4 +248,18 @@ SBBashTerminal >> state [
 SBBashTerminal >> state: aSymbol [
 
 	state := aSymbol
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> synopsis [
+
+	^ synopsis
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> synopsis: aString [
+
+	Transcript showln: aString.
+	synopsisBlock contents: aString.
+	synopsis := aString
 ]
