@@ -10,6 +10,12 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SBBashEditor class >> registerShortcuts: aProvider [
+
+	aProvider registerShortcut: Character tab do: #autocompleteFile
+]
+
+{ #category : #'as yet unclassified' }
 SBBashEditor >> descriptionBlock [
 
 	^ descriptionBlock

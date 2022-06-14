@@ -10,7 +10,8 @@ Class {
 		'monitorSemaphor',
 		'synopsis',
 		'synopsisBlock',
-		'description'
+		'description',
+		'waitingForCommandString'
 	],
 	#category : #SBBash
 }
@@ -176,7 +177,10 @@ SBBashTerminal >> readDataFromBash [
 	(buf := pty peekUpToEnd) isNil ifTrue: [buf := pty upToEnd].
 	ps1 := '' asText.
 	output := '' asText.
-	self readFrom: buf asString readStream writeInto: ps1 and: output.
+	self
+		readFrom: (SBWatch report: buf asString for: 406436996) readStream
+		writeInto: ps1
+		and: (SBWatch report: output for: 189930893).
 	((commandBlocks submorphs size = 0) not and: (output = '') not) ifTrue: [Project current addDeferredUIMessage: [self currentCommandBlock output: output]].
 	(ps1 = '') not ifTrue: [
 		Project current addDeferredUIMessage: [ | newCommandBlock |
@@ -233,8 +237,8 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 					self currentCommandBlock inputBlock moveCursorToEnd.
 					monitorSemaphor signal].
 				[#hidden] -> [
-					input upToEnd.
-					SBToggledCode comment: '' active: 0 do: {[input upTo: Character return]}.
+					"enter is actually cr + lf + '>' + ' ' and therefore counts as 4 characters"
+					input next: waitingForCommandString size + 1 + ((waitingForCommandString occurrencesOf: Character cr) * 3).
 					state := #output]}
 			otherwise: [input next]]
 ]
@@ -268,4 +272,16 @@ SBBashTerminal >> synopsis: aString [
 
 	self sandblockEditor synopsisBlock contents: aString.
 	synopsis := aString
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> waitingForCommandString [
+
+	^ waitingForCommandString
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> waitingForCommandString: aString [
+
+	waitingForCommandString := aString
 ]

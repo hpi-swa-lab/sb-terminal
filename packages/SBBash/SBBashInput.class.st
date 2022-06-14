@@ -13,13 +13,14 @@ Class {
 SBBashInput class >> confirm: aBlock [
 	<action>
 
-	| pty terminal |
+	| pty terminal command |
+	command := (aBlock orOwnerSuchThat: [:b | b type = #command]) sourceString.
 	terminal := aBlock containingArtefact.
 	pty := terminal pty.
 	terminal state: #hidden.
-	Project current addDeferredUIMessage: [
-		pty nextPutAll: (aBlock orOwnerSuchThat: [:b | b type = #command]) sourceString.
-		pty nextPut: Character return]
+	terminal waitingForCommandString: command.
+	pty nextPutAll: command.
+	pty nextPut: Character return
 ]
 
 { #category : #'as yet unclassified' }
