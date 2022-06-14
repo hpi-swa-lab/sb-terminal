@@ -2,10 +2,18 @@ Class {
 	#name : #SBBashEditor,
 	#superclass : #SBBrowserEditor,
 	#instVars : [
-		'synopsisBlock'
+		'synopsisBlock',
+		'argumentsBlock',
+		'descriptionBlock'
 	],
 	#category : #SBBash
 }
+
+{ #category : #'as yet unclassified' }
+SBBashEditor >> descriptionBlock [
+
+	^ descriptionBlock
+]
 
 { #category : #'as yet unclassified' }
 SBBashEditor >> initialize [
@@ -16,9 +24,20 @@ SBBashEditor >> initialize [
 		hResizing: #spaceFill;
 		vResizing: #spaceFill).
 	
-	self submorphs second addMorphBack: (synopsisBlock := SBBashFormattedTextBubble multiLine
-		placeholderText: 'No synopsis found';
-		focusable: false)
+	self submorphs second addMorphBack: (SBBlock new
+		addMorphBack: (synopsisBlock := SBBashFormattedTextBubble multiLine
+			placeholderText: 'No synopsis found';
+			focusable: false;
+			maxWidth: 200);
+		addMorphBack: (argumentsBlock := SBBashFormattedTextBubble multiLine
+			placeholderText: 'No arguments found';
+			focusable: false);
+		addMorphBack: (descriptionBlock := SBBashFormattedTextBubble multiLine
+			placeholderText: 'No description found';
+			focusable: false;
+			maxWidth: 200);
+		changeTableLayout;
+		listDirection: #topToBottom)
 ]
 
 { #category : #'as yet unclassified' }

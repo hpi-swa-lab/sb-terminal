@@ -32,8 +32,7 @@ SBBashCommandBlock >> initialize [
 			addMorphBack: (ps1 := SBBashFormattedTextBubble multiLine
 				vResizing: #shrinkWrap;
 				focusable: false);
-			addMorphBack: (input := SBBashInputTextBubble multiLine
-				placeholderText: 'type here';
+			addMorphBack: (input := (SBBashInput parseToplevel: '')
 				hResizing: #spaceFill;
 				vResizing: #spaceFill);
 			hResizing: #spaceFill;

@@ -70,7 +70,8 @@ SBBashInputTextBubble >> optionsFromManpage: manpage withCommand: fullCommandStr
 	command := SBBashCommand new
 		options: (ston at: #options);
 		fullCommandString: fullCommandString;
-		synopsis: (ston at: #synopsis).
+		synopsis: (ston at: #synopsis);
+		description: (ston at: #description).
 	self suggestionsFrom: command into: collection.
 	
 	^ command
@@ -98,7 +99,9 @@ SBBashInputTextBubble >> suggestions [
 	"alle options hinzufügen"
 	"options durchsuchen"
 	command := self loadManpageFor: commandString into: suggestions.
-	command ifNotNil: [self terminal synopsis: command synopsis].
+	command ifNotNil: [
+		self terminal synopsis: command synopsis.
+		self terminal description: command description].
 	
 	^ suggestions
 ]

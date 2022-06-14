@@ -9,7 +9,8 @@ Class {
 		'state',
 		'monitorSemaphor',
 		'synopsis',
-		'synopsisBlock'
+		'synopsisBlock',
+		'description'
 	],
 	#category : #SBBash
 }
@@ -37,7 +38,7 @@ SBBashTerminal >> attributesFrom: aString [
 				[#'92'] -> [TextColor green].
 				[#'91'] -> [TextColor red].
 				[#'90'] -> [TextColor black]}
-			otherwise: [TextColor black]]
+			otherwise: [TextColor gray]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -56,6 +57,19 @@ SBBashTerminal >> commands: anObject [
 SBBashTerminal >> currentCommandBlock [
 
 	^ commandBlocks lastSubmorph
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> description [
+
+	^ description
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> description: aString [
+
+	self sandblockEditor descriptionBlock contents: aString.
+	description := aString
 ]
 
 { #category : #'as yet unclassified' }
@@ -80,6 +94,12 @@ SBBashTerminal >> example [
 		setUp: [self class new]
 		cases: {SBMorphExampleCase name: 'example 1' caseBlock: [:m | m]}
 		extent: 300 @ 300
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> focus [
+
+	self currentCommandBlock focus
 ]
 
 { #category : #'as yet unclassified' }
@@ -244,15 +264,8 @@ SBBashTerminal >> state: aSymbol [
 ]
 
 { #category : #'as yet unclassified' }
-SBBashTerminal >> synopsis [
-
-	^ synopsis
-]
-
-{ #category : #'as yet unclassified' }
 SBBashTerminal >> synopsis: aString [
 
-	Transcript showln: aString.
 	self sandblockEditor synopsisBlock contents: aString.
 	synopsis := aString
 ]

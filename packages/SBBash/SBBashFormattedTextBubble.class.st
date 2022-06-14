@@ -10,7 +10,8 @@ Class {
 { #category : #'as yet unclassified' }
 SBBashFormattedTextBubble >> click: anEvent [
 
-	focusable ifTrue: [super click: anEvent] ifFalse: [self parentSandblock focus]
+	focusable ifTrue: [super click: anEvent] ifFalse: [
+		(self parentSandblock isKindOf: SBBashCommandBlock) ifTrue: [self parentSandblock focus]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -34,5 +35,7 @@ SBBashFormattedTextBubble >> keyStroke: anEvent [
 { #category : #'as yet unclassified' }
 SBBashFormattedTextBubble >> wasSelected [
 
-	focusable ifTrue: [super wasSelected] ifFalse: [self parentSandblock focus]
+	focusable
+		ifTrue: [super wasSelected]
+		ifFalse: [(self parentSandblock isKindOf: SBBashCommandBlock) ifTrue: [self parentSandblock focus]]
 ]
