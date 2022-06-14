@@ -10,6 +10,20 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> autocompleteFile [
+	<action>
+	<actionValidIf: #canAutocompleteFile:>
+
+	1 halt
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> canAutocompleteFile: aBlock [
+
+	^ aBlock type = #word and: [aBlock sandblockEditor suggestionMenu canUseSuggestion not]
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> confirm: aBlock [
 	<action>
 
@@ -24,7 +38,23 @@ SBBashInput class >> confirm: aBlock [
 ]
 
 { #category : #'as yet unclassified' }
-SBBashInput >> terminal [
+SBBashInput class >> suggestionsFor: aBlock [
 
-	^ self containingArtefact
+	(aBlock type = #word and: [aBlock parentSandblock type = #command]) ifTrue: [
+		^ {
+			SBTSBlockSuggestion new
+				blocks: {(self parseToplevel: 'command ', 'FILL') childSandblocks first childSandblocks second}
+				in: aBlock sandblockEditor}].
+	^ #()
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> suggestionsForInsert: aCommand [
+
+	(aCommand element isTSChoice and: [(aCommand element alternatives anySatisfy: [:alt | alt type = #'_primary_expression']) not]) ifTrue: [^ #()].
+	^ {
+		(SBInsertSuggestionItem selector: 'a' label: 'arg')
+			morph: (self parseToplevel: 'command ', '--FILL') childSandblocks first childSandblocks second
+				previewOnly: true;
+			yourself}
 ]
