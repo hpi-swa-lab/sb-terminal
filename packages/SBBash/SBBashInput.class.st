@@ -99,12 +99,22 @@ SBBashInput class >> suggestionsFor: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> suggestionsForInsert: aCommand [
 
-	(aCommand element isTSChoice and: [(aCommand element alternatives anySatisfy: [:alt | alt type = #'_primary_expression']) not]) ifTrue: [^ #()].
-	^ {
-		(SBInsertSuggestionItem selector: 'a' label: 'arg')
-			morph: (self parseToplevel: 'command ', '--FILL') childSandblocks first childSandblocks second
-				previewOnly: true;
-			yourself}
+	| suggestions terminal info container |
+	suggestions := OrderedCollection new.
+	(aCommand element isTSChoice and: [(aCommand element alternatives anySatisfy: [:alt | alt type = #'_primary_expression']) not]) ifTrue: [^ suggestions].
+	container := aCommand container.
+	terminal := container containingArtefact.
+	"TODO: searchString does not really fit here..."
+	info := SBBashCommandInformation new
+		fullCommand: container sourceString;
+		searchString: (container childSandblocks at: aCommand index - 1) sourceString;
+		terminal: terminal;
+		sandblockEditor: container sandblockEditor.
+	self loadManpageFor: info into: suggestions.
+	info commandObject ifNotNil: [
+		terminal synopsis: info commandObject synopsis.
+		terminal description: info commandObject description].
+	^ suggestions
 ]
 
 { #category : #'as yet unclassified' }
