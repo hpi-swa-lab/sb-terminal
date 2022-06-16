@@ -1,6 +1,6 @@
 Class {
-	#name : #SBBashSuggestionItem,
-	#superclass : #SBSuggestionItem,
+	#name : #SBBashInsertSuggestionItem,
+	#superclass : #SBInsertSuggestionItem,
 	#instVars : [
 		'option',
 		'command'
@@ -9,25 +9,25 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
-SBBashSuggestionItem >> command [
+SBBashInsertSuggestionItem >> command [
 
 	^ command
 ]
 
 { #category : #'as yet unclassified' }
-SBBashSuggestionItem >> command: anObject [
+SBBashInsertSuggestionItem >> command: anObject [
 
 	command := anObject
 ]
 
 { #category : #'as yet unclassified' }
-SBBashSuggestionItem >> option [
+SBBashInsertSuggestionItem >> option [
 
 	^ option
 ]
 
 { #category : #'as yet unclassified' }
-SBBashSuggestionItem >> option: aString [
+SBBashInsertSuggestionItem >> option: anObject [
 
-	option := aString
+	option := anObject
 ]

@@ -3,8 +3,7 @@ Class {
 	#superclass : #SBTextBubble,
 	#instVars : [
 		'terminal',
-		'current',
-		'processReturn'
+		'current'
 	],
 	#category : #SBBash
 }
@@ -144,9 +143,8 @@ SBBashInputTextBubble >> suggestionsFrom: command into: collection [
 		flagsJoined := flags joinSeparatedBy: ', '.
 		suggestionText := flagsJoined, ': ', description.
 		((flagsJoined findString: current) > 0 or: (description findString: current) > 0) ifTrue: [
-			collection add: ((SBBashSuggestionItem
-				selector: suggestionText
-				label: command commandString, firstFlag)
+			collection add: (SBBashTSBlockSuggestion new
+				selector: suggestionText;
 				option: firstFlag;
 				command: command commandString)]]
 ]
