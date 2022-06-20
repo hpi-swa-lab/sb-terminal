@@ -26,12 +26,12 @@ SBBashInput class >> canAutocompleteFile: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> commandFrom: manpage [
 
-	| ston |
-	ston := STON fromString: manpage.
+	| json |
+	json := Json readFrom: manpage readStream.
 	^ SBBashCommand new
-		options: (ston at: #options);
-		synopsis: (ston at: #synopsis);
-		description: (ston at: #description)
+		options: (json at: #options);
+		synopsis: (json at: #synopsis);
+		description: (json at: #description)
 ]
 
 { #category : #'as yet unclassified' }
@@ -107,7 +107,6 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 	"TODO: searchString does not really fit here..."
 	info := SBBashCommandInformation new
 		fullCommand: container sourceString;
-		searchString: (container childSandblocks at: aCommand index - 1) sourceString;
 		terminal: terminal;
 		sandblockEditor: container sandblockEditor.
 	self loadManpageFor: info into: suggestions.
@@ -126,7 +125,7 @@ SBBashInput class >> suggestionsFrom: anInfoObject into: collection [
 		flags ifNotEmpty: [firstFlag := flags first] ifEmpty: [firstFlag := ''].
 		flagsJoined := flags joinSeparatedBy: ', '.
 		suggestionText := flagsJoined, ': ', description.
-		((flagsJoined findString: anInfoObject searchString) > 0 or: (description findString: anInfoObject searchString) > 0) ifTrue: [
+		(anInfoObject searchString notNil and: [(flagsJoined findString: anInfoObject searchString) > 0 or: (description findString: anInfoObject searchString) > 0]) ifTrue: [
 			"TODO: Blocks collection für Parameter verwenden"
 			collection add: (SBBashTSBlockSuggestion new
 				selector: description;
