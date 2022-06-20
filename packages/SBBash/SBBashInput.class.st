@@ -57,10 +57,10 @@ SBBashInput class >> loadManpageFor: anInfoObject into: collection [
 		detect: [:c | c commandString = anInfoObject mainCommand]
 		ifNone: [].
 	command isNil ifTrue: [
-		manpage := UnixProcess thisOSProcess waitForCommandOutput: 'cd ../manpages; ./create_manpage_completions.py -f "', anInfoObject mainCommand, '"'.
+		manpage := UnixProcess thisOSProcess waitForCommandOutput: 'cd ../manpages/manpage_completions; ./create_manpage_completions.py -f "', anInfoObject mainCommand, '"'.
 		manpage = '' ifTrue: [^ nil].
 		command := self commandFrom: manpage.
-		command fullCommandString: anInfoObject fullCommand.
+		command commandString: anInfoObject mainCommand.
 		anInfoObject terminal commands add: command].
 	anInfoObject commandObject: command.
 	self suggestionsFrom: anInfoObject into: collection
@@ -103,10 +103,11 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 	suggestions := OrderedCollection new.
 	(aCommand element isTSChoice and: [(aCommand element alternatives anySatisfy: [:alt | alt type = #'_primary_expression']) not]) ifTrue: [^ suggestions].
 	container := aCommand container.
+	container childSandblocks ifEmpty: [^ suggestions].
 	terminal := container containingArtefact.
-	"TODO: searchString does not really fit here..."
 	info := SBBashCommandInformation new
 		fullCommand: container sourceString;
+		previousBlock: (container childSandblocks at: aCommand index - 1);
 		terminal: terminal;
 		sandblockEditor: container sandblockEditor.
 	self loadManpageFor: info into: suggestions.
@@ -125,12 +126,20 @@ SBBashInput class >> suggestionsFrom: anInfoObject into: collection [
 		flags ifNotEmpty: [firstFlag := flags first] ifEmpty: [firstFlag := ''].
 		flagsJoined := flags joinSeparatedBy: ', '.
 		suggestionText := flagsJoined, ': ', description.
-		(anInfoObject searchString notNil and: [(flagsJoined findString: anInfoObject searchString) > 0 or: (description findString: anInfoObject searchString) > 0]) ifTrue: [
-			"TODO: Blocks collection für Parameter verwenden"
-			collection add: (SBBashTSBlockSuggestion new
-				selector: description;
-				blocks: {(self parseToplevel: 'command ', firstFlag) childSandblocks first childSandblocks second}
-					in: anInfoObject sandblockEditor;
-				option: firstFlag;
-				command: anInfoObject mainCommand)]]
+		
+		anInfoObject searchString
+			ifNil: [
+				"probably from suggestionsForInsert:"
+				collection add: ((SBBashInsertSuggestionItem selector: 'a' label: 'arg')
+					morph: (self parseToplevel: 'command ', firstFlag) childSandblocks first childSandblocks second
+					previewOnly: true)]
+			ifNotNil: [
+				"probably from suggestionsFor:"
+				((flagsJoined findString: anInfoObject searchString) > 0 or: (description findString: anInfoObject searchString) > 0) ifTrue: [
+					collection add: (SBBashTSBlockSuggestion new
+						selector: description;
+						blocks: {(self parseToplevel: 'command ', firstFlag) childSandblocks first childSandblocks second}
+							in: anInfoObject sandblockEditor;
+						option: firstFlag;
+						command: anInfoObject mainCommand)]]]
 ]

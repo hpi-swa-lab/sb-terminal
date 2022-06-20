@@ -2,7 +2,7 @@ Class {
 	#name : #SBBashCommand,
 	#superclass : #Object,
 	#instVars : [
-		'fullCommandString',
+		'commandString',
 		'subcommands',
 		'options',
 		'description',
@@ -14,7 +14,13 @@ Class {
 { #category : #'as yet unclassified' }
 SBBashCommand >> commandString [
 
-	^ fullCommandString from: 1 to: fullCommandString lastSpacePosition
+	^ commandString
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommand >> commandString: aString [
+
+	commandString := aString
 ]
 
 { #category : #'as yet unclassified' }
@@ -27,18 +33,6 @@ SBBashCommand >> description [
 SBBashCommand >> description: anObject [
 
 	description := anObject
-]
-
-{ #category : #'as yet unclassified' }
-SBBashCommand >> fullCommandString [
-
-	^ fullCommandString
-]
-
-{ #category : #'as yet unclassified' }
-SBBashCommand >> fullCommandString: aString [
-
-	fullCommandString := aString
 ]
 
 { #category : #'as yet unclassified' }

@@ -5,6 +5,7 @@ Class {
 		'terminal',
 		'fullCommand',
 		'searchString',
+		'previousBlock',
 		'commandObject',
 		'sandblockEditor'
 	],
@@ -42,6 +43,18 @@ SBBashCommandInformation >> mainCommand [
 	searchString
 		ifNil: [^ fullCommand]
 		ifNotNil: [^ fullCommand from: 1 to: fullCommand size - searchString size]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandInformation >> previousBlock [
+
+	^ previousBlock
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandInformation >> previousBlock: aString [
+
+	previousBlock := aString
 ]
 
 { #category : #'as yet unclassified' }
