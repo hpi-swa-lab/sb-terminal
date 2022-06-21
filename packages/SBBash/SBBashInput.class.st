@@ -130,9 +130,10 @@ SBBashInput class >> suggestionsFrom: anInfoObject into: collection [
 		anInfoObject searchString
 			ifNil: [
 				"probably from suggestionsForInsert:"
-				collection add: ((SBBashInsertSuggestionItem selector: 'a' label: 'arg')
+				collection add: (SBBashInsertSuggestionItem new
+					selector: description;
 					morph: (self parseToplevel: 'command ', firstFlag) childSandblocks first childSandblocks second
-					previewOnly: true)]
+						previewOnly: false)]
 			ifNotNil: [
 				"probably from suggestionsFor:"
 				((flagsJoined findString: anInfoObject searchString) > 0 or: (description findString: anInfoObject searchString) > 0) ifTrue: [
