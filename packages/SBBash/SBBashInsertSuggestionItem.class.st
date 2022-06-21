@@ -3,7 +3,9 @@ Class {
 	#superclass : #SBInsertSuggestionItem,
 	#instVars : [
 		'option',
-		'command'
+		'command',
+		'blocks',
+		'morphs'
 	],
 	#category : #SBBash
 }
@@ -18,6 +20,18 @@ SBBashInsertSuggestionItem >> command [
 SBBashInsertSuggestionItem >> command: anObject [
 
 	command := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> morphs: aCollection editor: anEditor [
+
+	| wrapper |
+	morphs := aCollection.
+	wrapper := SBBlock new
+		addAllMorphsBack: aCollection;
+		changeTableLayout;
+		listDirection: #leftToRight.
+	self addMorphBack: (wrapper wrapOffscreen: anEditor) imageForm asMorph
 ]
 
 { #category : #'as yet unclassified' }
@@ -42,4 +56,10 @@ SBBashInsertSuggestionItem >> selector: aString [
 		contents: aString;
 		hResizing: #spaceFill;
 		maxWidth: 400)
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> useSuggestionOn: aCommand in: anEditor [
+
+	anEditor do: (aCommand morphs: morphs)
 ]

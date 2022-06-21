@@ -16,7 +16,9 @@ SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor popup: aPopup [
 		preview: (anEditor newSelectionContainer
 			addAllMorphs: aCollection;
 			width: 400;
-			imageForm)
+			imageForm;
+			changeTableLayout;
+			listDirection: #leftToRight)
 		previewOnly: false.
 	^ blocks := aCollection
 ]
@@ -55,4 +57,10 @@ SBBashTSBlockSuggestion >> selector: aString [
 		contents: aString;
 		hResizing: #spaceFill;
 		maxWidth: 400)
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> useSuggestionOn: aBlock in: anEditor [
+
+	super useSuggestionOn: aBlock in: anEditor
 ]

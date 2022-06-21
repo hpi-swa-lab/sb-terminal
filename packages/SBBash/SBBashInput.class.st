@@ -120,27 +120,43 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 { #category : #'as yet unclassified' }
 SBBashInput class >> suggestionsFrom: anInfoObject into: collection [
 
-	anInfoObject commandObject options do: [:option | | flags description flagsJoined firstFlag suggestionText |
+	anInfoObject commandObject options do: [:option | | flags description flagsJoined firstFlag suggestionText arguments optionals morphs |
 		description := option at: #description.
 		flags := option at: #flags.
+		arguments := option at: #arguments.
+		optionals := option at: #optionals.
 		flags ifNotEmpty: [firstFlag := flags first] ifEmpty: [firstFlag := ''].
 		flagsJoined := flags joinSeparatedBy: ', '.
 		suggestionText := flagsJoined, ': ', description.
 		
+		morphs := OrderedCollection new.
+		morphs add: (self parseToplevel: 'command ', firstFlag) childSandblocks first childSandblocks second.
+		morphs addAll: (arguments collect: [:arg | (self parseToplevel: 'command ', ('=', arg)) childSandblocks first childSandblocks second]).
 		anInfoObject searchString
 			ifNil: [
 				"probably from suggestionsForInsert:"
+				"without optionals"
 				collection add: (SBBashInsertSuggestionItem new
 					selector: description;
-					morph: (self parseToplevel: 'command ', firstFlag) childSandblocks first childSandblocks second
-						previewOnly: false)]
+					morphs: morphs editor: anInfoObject sandblockEditor).
+				"with optionals"
+				optionals notEmpty ifTrue: [
+					morphs addAll: (optionals collect: [:opt | (self parseToplevel: 'command ', ('=', opt)) childSandblocks first childSandblocks second]).
+					collection add: (SBBashInsertSuggestionItem new
+						morphs: morphs
+						editor: anInfoObject sandblockEditor)]]
 			ifNotNil: [
 				"probably from suggestionsFor:"
 				((flagsJoined findString: anInfoObject searchString) > 0 or: (description findString: anInfoObject searchString) > 0) ifTrue: [
 					collection add: (SBBashTSBlockSuggestion new
 						selector: description;
-						blocks: {(self parseToplevel: 'command ', firstFlag) childSandblocks first childSandblocks second}
-							in: anInfoObject sandblockEditor;
+						blocks: morphs in: anInfoObject sandblockEditor;
 						option: firstFlag;
-						command: anInfoObject mainCommand)]]]
+						command: anInfoObject mainCommand).
+					optionals notEmpty ifTrue: [
+						morphs addAll: (optionals collect: [:opt | (self parseToplevel: 'command ', ('=', opt)) childSandblocks first childSandblocks second]).
+						collection add: (SBBashTSBlockSuggestion new
+							blocks: morphs in: anInfoObject sandblockEditor;
+							option: firstFlag;
+							command: anInfoObject mainCommand)]]]]
 ]
