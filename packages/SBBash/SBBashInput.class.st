@@ -60,10 +60,29 @@ SBBashInput class >> loadManpageFor: anInfoObject into: collection [
 		manpage := UnixProcess thisOSProcess waitForCommandOutput: 'cd ../manpages/manpage_completions; ./create_manpage_completions.py -f "', anInfoObject mainCommand, '"'.
 		manpage = '' ifTrue: [^ nil].
 		command := self commandFrom: manpage.
-		command commandString: anInfoObject mainCommand.
+		command
+			commandString: anInfoObject mainCommand;
+			subcommands: (anInfoObject terminal allCommands select: [:cmd | (cmd findString: anInfoObject mainCommand) = 1]).
 		anInfoObject terminal commands add: command].
 	anInfoObject commandObject: command.
+	self subcommandsFrom: anInfoObject into: collection.
 	self suggestionsFrom: anInfoObject into: collection
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> subcommandsFrom: anInfoObject into: collection [
+
+	anInfoObject commandObject subcommands do: [:subcmd |
+		anInfoObject searchString
+			ifNil: [
+				collection add: (SBBashInsertSuggestionItem new
+					morph: (self parseToplevel: subcmd) childSandblocks first
+					previewOnly: true)]
+			ifNotNil: [
+				(subcmd findString: anInfoObject fullCommand) > 0 ifTrue: [
+					collection add: (SBBashTSBlockSuggestion new
+						blocks: (self parseToplevel: subcmd) childSandblocks
+						in: anInfoObject sandblockEditor)]]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -92,7 +111,8 @@ SBBashInput class >> suggestionsFor: aBlock [
 	self loadManpageFor: info into: suggestions.
 	info commandObject ifNotNil: [
 		terminal synopsis: info commandObject synopsis.
-		terminal description: info commandObject description].
+		terminal description: info commandObject description.
+		terminal debugOutput: info mainCommand].
 	^ suggestions
 ]
 
@@ -130,12 +150,14 @@ SBBashInput class >> suggestionsFrom: anInfoObject into: collection [
 		suggestionText := flagsJoined, ': ', description.
 		
 		morphs := OrderedCollection new.
-		morphs add: (self parseToplevel: 'command ', firstFlag) childSandblocks first childSandblocks second.
-		morphs addAll: (arguments collect: [:arg | (self parseToplevel: 'command ', ('=', arg)) childSandblocks first childSandblocks second]).
+		arguments
+			ifEmpty: [morphs add: (self parseToplevel: 'command ', firstFlag) childSandblocks first childSandblocks second]
+			ifNotEmpty: [morphs add: (self parseToplevel: 'command ', (firstFlag, ('=', arguments first))) childSandblocks first childSandblocks second].
+		SBToggledCode comment: '' active: 0 do: {
+			[morphs addAll: (arguments collect: [:arg | (self parseToplevel: 'command ', ('=', arg)) childSandblocks first childSandblocks second])]}.
 		anInfoObject searchString
 			ifNil: [
 				"probably from suggestionsForInsert:"
-				"without optionals"
 				collection add: (SBBashInsertSuggestionItem new
 					selector: description;
 					morphs: morphs editor: anInfoObject sandblockEditor).
@@ -153,6 +175,7 @@ SBBashInput class >> suggestionsFrom: anInfoObject into: collection [
 						blocks: morphs in: anInfoObject sandblockEditor;
 						option: firstFlag;
 						command: anInfoObject mainCommand).
+					"with optionals"
 					optionals notEmpty ifTrue: [
 						morphs addAll: (optionals collect: [:opt | (self parseToplevel: 'command ', ('=', opt)) childSandblocks first childSandblocks second]).
 						collection add: (SBBashTSBlockSuggestion new

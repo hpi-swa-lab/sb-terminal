@@ -11,10 +11,18 @@ Class {
 		'synopsis',
 		'synopsisBlock',
 		'description',
-		'waitingForCommandString'
+		'waitingForCommandString',
+		'debugOutput',
+		'allCommands'
 	],
 	#category : #SBBash
 }
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> allCommands [
+
+	^ allCommands
+]
 
 { #category : #'as yet unclassified' }
 SBBashTerminal >> attributesFrom: aString [
@@ -58,6 +66,13 @@ SBBashTerminal >> commands: anObject [
 SBBashTerminal >> currentCommandBlock [
 
 	^ commandBlocks lastSubmorph
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> debugOutput: aString [
+
+	self sandblockEditor debugBlock contents: aString.
+	debugOutput := aString
 ]
 
 { #category : #'as yet unclassified' }
@@ -142,6 +157,7 @@ SBBashTerminal >> launchBash [
 	(pty := PseudoTTY command: '/bin/bash' arguments: {'-i'}) isNil ifTrue: [^ self error: 'could not create process'].
 	
 	closed := false.
+	allCommands := (UnixProcess thisOSProcess waitForCommandOutput: 'ls /usr/share/man/man1/') lines collect: [:path | ((path upTo: $.) findTokens: '-_') joinSeparatedBy: ' '].
 	pty nextPutAll: 'PS1="\e]81m${PS1}\e]80m"'.
 	pty nextPut: Character return.
 	state := #output.

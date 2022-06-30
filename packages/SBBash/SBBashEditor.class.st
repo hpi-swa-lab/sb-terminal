@@ -3,8 +3,8 @@ Class {
 	#superclass : #SBBrowserEditor,
 	#instVars : [
 		'synopsisBlock',
-		'argumentsBlock',
-		'descriptionBlock'
+		'descriptionBlock',
+		'debugBlock'
 	],
 	#category : #SBBash
 }
@@ -13,6 +13,12 @@ Class {
 SBBashEditor class >> registerShortcuts: aProvider [
 
 	aProvider registerShortcut: Character tab do: #autocompleteFile
+]
+
+{ #category : #'as yet unclassified' }
+SBBashEditor >> debugBlock [
+
+	^ debugBlock
 ]
 
 { #category : #'as yet unclassified' }
@@ -35,8 +41,8 @@ SBBashEditor >> initialize [
 			placeholderText: 'No synopsis found';
 			focusable: false;
 			maxWidth: 200);
-		addMorphBack: (argumentsBlock := SBBashFormattedTextBubble multiLine
-			placeholderText: 'No arguments found';
+		addMorphBack: (debugBlock := SBBashFormattedTextBubble multiLine
+			placeholderText: 'No debugoutput found';
 			focusable: false);
 		addMorphBack: (descriptionBlock := SBBashFormattedTextBubble multiLine
 			placeholderText: 'No description found';
