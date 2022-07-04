@@ -127,9 +127,9 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 	terminal := container containingArtefact.
 	info := SBBashCommandInformation new
 		fullCommand: container sourceString;
-		previousBlock: (container childSandblocks at: aCommand index - 1);
 		terminal: terminal;
 		sandblockEditor: container sandblockEditor.
+	aCommand index > 1 ifTrue: [info previousBlock: (container childSandblocks at: aCommand index - 1)].
 	self loadManpageFor: info into: suggestions.
 	info commandObject ifNotNil: [
 		terminal synopsis: info commandObject synopsis.

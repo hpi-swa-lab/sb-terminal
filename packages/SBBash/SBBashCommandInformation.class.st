@@ -52,9 +52,9 @@ SBBashCommandInformation >> previousBlock [
 ]
 
 { #category : #'as yet unclassified' }
-SBBashCommandInformation >> previousBlock: aString [
+SBBashCommandInformation >> previousBlock: anObject [
 
-	previousBlock := aString
+	previousBlock := anObject
 ]
 
 { #category : #'as yet unclassified' }
