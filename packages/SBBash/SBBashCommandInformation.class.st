@@ -42,7 +42,7 @@ SBBashCommandInformation >> mainCommand [
 
 	searchString
 		ifNil: [^ fullCommand]
-		ifNotNil: [^ fullCommand from: 1 to: fullCommand size - searchString size]
+		ifNotNil: [^ fullCommand from: 1 to: fullCommand size - searchString size - 1]
 ]
 
 { #category : #'as yet unclassified' }

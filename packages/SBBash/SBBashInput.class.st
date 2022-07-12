@@ -49,7 +49,44 @@ SBBashInput class >> confirm: aBlock [
 ]
 
 { #category : #'as yet unclassified' }
-SBBashInput class >> loadManpageFor: anInfoObject into: collection [
+SBBashInput class >> loadInsertSubcommandsFrom: anInfoObject into: collection [
+
+	| subcommands |
+	subcommands := self loadOnlyNextSubcommandsFor: anInfoObject.
+	"TODO: machen, dass das richtig geparst wird --> command davor, aber nicht alle Blöcke nehmen"
+	subcommands do: [:subcmd |
+		collection add: (SBBashInsertSuggestionItem new
+			morph: (self parseToplevel: anInfoObject mainCommand, ' ', subcmd) childSandblocks first childSandblocks second
+			previewOnly: true)]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> loadInsertSuggestionsFrom: anInfoObject into: collection [
+
+	anInfoObject commandObject options do: [:option | | morphs flagInfo |
+		flagInfo := SBBashFlagInformation new
+			description: (option at: #description);
+			flags: (option at: #flags);
+			arguments: (option at: #arguments);
+			optionals: (option at: #optionals).
+		
+		morphs := OrderedCollection new.
+		flagInfo arguments
+			ifEmpty: [morphs add: (self parseToplevel: 'command ', flagInfo firstFlag) childSandblocks first childSandblocks second]
+			ifNotEmpty: [morphs add: (self parseToplevel: 'command ', (flagInfo firstFlag, ('=', flagInfo arguments first))) childSandblocks first childSandblocks second].
+		collection add: (SBBashInsertSuggestionItem new
+			selector: flagInfo description;
+			morphs: morphs editor: anInfoObject sandblockEditor).
+		"with optionals"
+		flagInfo optionals notEmpty ifTrue: [
+			morphs addAll: (flagInfo optionals collect: [:opt | (self parseToplevel: 'command ', (flagInfo firstFlag, ('=', opt))) childSandblocks first childSandblocks second]).
+			collection add: (SBBashInsertSuggestionItem new
+				morphs: morphs
+				editor: anInfoObject sandblockEditor)]]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> loadManpageFor: anInfoObject [
 
 	| manpage command |
 	"this could also be a function in the info object"
@@ -62,15 +99,13 @@ SBBashInput class >> loadManpageFor: anInfoObject into: collection [
 		command := self commandFrom: manpage.
 		command
 			commandString: anInfoObject mainCommand;
-			subcommands: (anInfoObject terminal allCommands select: [:cmd | (cmd findString: (anInfoObject mainCommand), ' ') = 1]).
+			subcommands: (anInfoObject terminal allCommands select: [:cmd | (cmd findString: anInfoObject mainCommand, ' ') = 1]).
 		anInfoObject terminal commands add: command].
-	anInfoObject commandObject: command.
-	self subcommandsFrom: anInfoObject into: collection.
-	self suggestionsFrom: anInfoObject into: collection
+	anInfoObject commandObject: command
 ]
 
 { #category : #'as yet unclassified' }
-SBBashInput class >> subcommandsFrom: anInfoObject into: collection [
+SBBashInput class >> loadOnlyNextSubcommandsFor: anInfoObject [
 
 	| subcommands |
 	subcommands := anInfoObject commandObject subcommands collect: [:cmd | | from upto |
@@ -80,18 +115,50 @@ SBBashInput class >> subcommandsFrom: anInfoObject into: collection [
 		cmd size >= from ifTrue: [cmd from: from to: upto]].
 	subcommands := subcommands select: [:cmd | cmd notNil].
 	subcommands := (subcommands collect: [:cmd | cmd -> true] into: OrderedDictionary new) keys.
+	^ subcommands
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
+
+	| subcommands |
+	subcommands := self loadOnlyNextSubcommandsFor: anInfoObject.
 	"TODO: machen, dass das richtig geparst wird --> command davor, aber nicht alle Blöcke nehmen"
 	subcommands do: [:subcmd |
-		anInfoObject searchString
-			ifNil: [
-				collection add: (SBBashInsertSuggestionItem new
-					morph: (self parseToplevel: subcmd) childSandblocks first
-					previewOnly: true)]
-			ifNotNil: [
-				(subcmd findString: anInfoObject fullCommand) > 0 ifTrue: [
-					collection add: (SBBashTSBlockSuggestion new
-						blocks: (self parseToplevel: subcmd) childSandblocks
-						in: anInfoObject sandblockEditor)]]]
+		(subcmd findString: anInfoObject searchString) > 0 ifTrue: [
+			collection add: (SBBashTSBlockSuggestion new
+				blocks: {
+					(self parseToplevel: anInfoObject mainCommand, (' ', subcmd)) childSandblocks first childSandblocks second}
+				in: anInfoObject sandblockEditor)]]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
+
+	anInfoObject commandObject options do: [:option | | morphs flagInfo |
+		flagInfo := SBBashFlagInformation new
+			description: (option at: #description);
+			flags: (option at: #flags);
+			arguments: (option at: #arguments);
+			optionals: (option at: #optionals).
+		
+		morphs := OrderedCollection new.
+		flagInfo arguments
+			ifEmpty: [morphs add: (self parseToplevel: 'command ', flagInfo firstFlag) childSandblocks first childSandblocks second]
+			ifNotEmpty: [morphs add: (self parseToplevel: 'command ', (flagInfo firstFlag, ('=', flagInfo arguments first))) childSandblocks first childSandblocks second].
+		((flagInfo flagsJoined findString: anInfoObject searchString) > 0 or: (flagInfo description findString: anInfoObject searchString) > 0) ifTrue: [
+			collection add: (SBBashTSBlockSuggestion new
+				selector: flagInfo description;
+				blocks: morphs in: anInfoObject sandblockEditor;
+				option: flagInfo firstFlag;
+				command: anInfoObject mainCommand).
+			"with optionals"
+			flagInfo optionals notEmpty ifTrue: [
+				morphs addAll: (flagInfo optionals collect: [:opt | (self parseToplevel: 'command ', (flagInfo firstFlag, ('=', opt))) childSandblocks first childSandblocks second]).
+				collection add: (SBBashTSBlockSuggestion new
+					blocks: morphs in: anInfoObject sandblockEditor;
+					option: flagInfo firstFlag;
+					command: anInfoObject mainCommand)]]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -117,7 +184,9 @@ SBBashInput class >> suggestionsFor: aBlock [
 		searchString: aBlock sourceString;
 		terminal: terminal;
 		sandblockEditor: aBlock sandblockEditor.
-	self loadManpageFor: info into: suggestions.
+	self loadManpageFor: info.
+	self loadSubcommandsFrom: info into: suggestions.
+	self loadSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
 		terminal synopsis: info commandObject synopsis.
 		terminal description: info commandObject description.
@@ -140,58 +209,13 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 		terminal: terminal;
 		sandblockEditor: container sandblockEditor.
 	aCommand index > 1 ifTrue: [info previousBlock: (container childSandblocks at: aCommand index - 1)].
-	self loadManpageFor: info into: suggestions.
+	self loadManpageFor: info.
+	self loadInsertSubcommandsFrom: info into: suggestions.
+	self loadInsertSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
 		terminal synopsis: info commandObject synopsis.
 		terminal description: info commandObject description].
 	^ suggestions
-]
-
-{ #category : #'as yet unclassified' }
-SBBashInput class >> suggestionsFrom: anInfoObject into: collection [
-
-	anInfoObject commandObject options do: [:option | | flags description flagsJoined firstFlag suggestionText arguments optionals morphs |
-		description := option at: #description.
-		flags := option at: #flags.
-		arguments := option at: #arguments.
-		optionals := option at: #optionals.
-		flags ifNotEmpty: [firstFlag := flags first] ifEmpty: [firstFlag := ''].
-		flagsJoined := flags joinSeparatedBy: ', '.
-		suggestionText := flagsJoined, ': ', description.
-		
-		morphs := OrderedCollection new.
-		arguments
-			ifEmpty: [morphs add: (self parseToplevel: 'command ', firstFlag) childSandblocks first childSandblocks second]
-			ifNotEmpty: [morphs add: (self parseToplevel: 'command ', (firstFlag, ('=', arguments first))) childSandblocks first childSandblocks second].
-		SBToggledCode comment: '' active: 0 do: {
-			[morphs addAll: (arguments collect: [:arg | (self parseToplevel: 'command ', ('=', arg)) childSandblocks first childSandblocks second])]}.
-		anInfoObject searchString
-			ifNil: [
-				"probably from suggestionsForInsert:"
-				collection add: (SBBashInsertSuggestionItem new
-					selector: description;
-					morphs: morphs editor: anInfoObject sandblockEditor).
-				"with optionals"
-				optionals notEmpty ifTrue: [
-					morphs addAll: (optionals collect: [:opt | (self parseToplevel: 'command ', (firstFlag, ('=', opt))) childSandblocks first childSandblocks second]).
-					collection add: (SBBashInsertSuggestionItem new
-						morphs: morphs
-						editor: anInfoObject sandblockEditor)]]
-			ifNotNil: [
-				"probably from suggestionsFor:"
-				((flagsJoined findString: anInfoObject searchString) > 0 or: (description findString: anInfoObject searchString) > 0) ifTrue: [
-					collection add: (SBBashTSBlockSuggestion new
-						selector: description;
-						blocks: morphs in: anInfoObject sandblockEditor;
-						option: firstFlag;
-						command: anInfoObject mainCommand).
-					"with optionals"
-					optionals notEmpty ifTrue: [
-						morphs addAll: (optionals collect: [:opt | (self parseToplevel: 'command ', ('=', opt)) childSandblocks first childSandblocks second]).
-						collection add: (SBBashTSBlockSuggestion new
-							blocks: morphs in: anInfoObject sandblockEditor;
-							option: firstFlag;
-							command: anInfoObject mainCommand)]]]]
 ]
 
 { #category : #'as yet unclassified' }
