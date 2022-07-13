@@ -84,7 +84,7 @@ SBBashTerminal >> description [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> description: aString [
 
-	self sandblockEditor descriptionBlock contents: aString.
+	self sandblockEditor descriptionBlock contents: (aString ifNil: ['']).
 	description := aString
 ]
 
@@ -142,6 +142,12 @@ SBBashTerminal >> initialize [
 	commands := OrderedCollection new.
 	monitorSemaphor := Semaphore new.
 	self launchBash
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> insertCommandRequest: aMorph near: aBlock before: aBoolean [
+
+	^ nil
 ]
 
 { #category : #'as yet unclassified' }
@@ -286,7 +292,7 @@ SBBashTerminal >> state: aSymbol [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> synopsis: aString [
 
-	self sandblockEditor synopsisBlock contents: aString.
+	self sandblockEditor synopsisBlock contents: (aString ifNil: ['']).
 	synopsis := aString
 ]
 

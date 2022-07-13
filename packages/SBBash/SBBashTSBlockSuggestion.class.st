@@ -11,16 +11,12 @@ Class {
 { #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor popup: aPopup [
 
-	disambiguatePopup := aPopup.
-	self
-		preview: (anEditor newSelectionContainer
-			addAllMorphs: aCollection;
-			width: 400;
-			imageForm;
-			changeTableLayout;
-			listDirection: #leftToRight)
-		previewOnly: false.
-	^ blocks := aCollection
+	super
+		blocks: (SBReplaceMultipleCommand new
+			target: anEditor selection
+			replacers: (aCollection collect: [:m | m isTSBlock ifTrue: [m adaptSlotFor: anEditor selection slot] ifFalse: [m]]))
+		in: anEditor
+		popup: aPopup
 ]
 
 { #category : #'as yet unclassified' }

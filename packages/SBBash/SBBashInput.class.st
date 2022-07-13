@@ -56,8 +56,11 @@ SBBashInput class >> loadInsertSubcommandsFrom: anInfoObject into: collection [
 	"TODO: machen, dass das richtig geparst wird --> command davor, aber nicht alle Blöcke nehmen"
 	subcommands do: [:subcmd |
 		collection add: (SBBashInsertSuggestionItem new
-			morph: (self parseToplevel: anInfoObject mainCommand, ' ', subcmd) childSandblocks first childSandblocks second
-			previewOnly: true)]
+			morphs: {
+				(self blockFor: #word)
+					contents: subcmd;
+					yourself}
+			editor: anInfoObject sandblockEditor)]
 ]
 
 { #category : #'as yet unclassified' }
@@ -67,8 +70,8 @@ SBBashInput class >> loadInsertSuggestionsFrom: anInfoObject into: collection [
 		flagInfo := SBBashFlagInformation new
 			description: (option at: #description);
 			flags: (option at: #flags);
-			arguments: (option at: #arguments);
-			optionals: (option at: #optionals).
+			arguments: ((option at: #arguments) ifNil: [{}]);
+			optionals: ((option at: #optionals) ifNil: [{}]).
 		
 		morphs := OrderedCollection new.
 		flagInfo arguments
@@ -127,8 +130,7 @@ SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 	subcommands do: [:subcmd |
 		(subcmd findString: anInfoObject searchString) > 0 ifTrue: [
 			collection add: (SBBashTSBlockSuggestion new
-				blocks: {
-					(self parseToplevel: anInfoObject mainCommand, (' ', subcmd)) childSandblocks first childSandblocks second}
+				blocks: {(self blockFor: #word) contents: subcmd}
 				in: anInfoObject sandblockEditor)]]
 ]
 
@@ -139,8 +141,8 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 		flagInfo := SBBashFlagInformation new
 			description: (option at: #description);
 			flags: (option at: #flags);
-			arguments: (option at: #arguments);
-			optionals: (option at: #optionals).
+			arguments: ((option at: #arguments) ifNil: [{}]);
+			optionals: ((option at: #optionals) ifNil: [{}]).
 		
 		morphs := OrderedCollection new.
 		flagInfo arguments

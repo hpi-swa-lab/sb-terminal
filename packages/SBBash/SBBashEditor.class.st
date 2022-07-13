@@ -32,11 +32,11 @@ SBBashEditor >> initialize [
 
 	super initialize.
 	
-	self openMorphInView: (SBBashTerminal new
+	self openMorph: (SBBashTerminal new
 		hResizing: #spaceFill;
 		vResizing: #spaceFill).
 	
-	self submorphs second addMorphBack: (SBBlock new
+	self submorphs second addMorphBack: (SBColumn new
 		addMorphBack: (synopsisBlock := SBBashFormattedTextBubble multiLine
 			placeholderText: 'No synopsis found';
 			focusable: false;
@@ -47,9 +47,13 @@ SBBashEditor >> initialize [
 		addMorphBack: (descriptionBlock := SBBashFormattedTextBubble multiLine
 			placeholderText: 'No description found';
 			focusable: false;
-			maxWidth: 200);
-		changeTableLayout;
-		listDirection: #topToBottom)
+			maxWidth: 200))
+]
+
+{ #category : #'as yet unclassified' }
+SBBashEditor >> insertCommandRequest: aMorph near: aBlock before: aBoolean [
+
+	^ nil
 ]
 
 { #category : #'as yet unclassified' }
