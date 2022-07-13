@@ -17,6 +17,12 @@ SBBashCommandBlock >> addInput: aString [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashCommandBlock >> floating [
+
+	^ true
+]
+
+{ #category : #'as yet unclassified' }
 SBBashCommandBlock >> focus [
 
 	input startInputAtEnd
