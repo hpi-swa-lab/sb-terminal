@@ -62,5 +62,7 @@ SBBashTSBlockSuggestion >> selector: aString [
 { #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> useSuggestionOn: aBlock in: anEditor [
 
-	super useSuggestionOn: aBlock in: anEditor
+	disambiguatePopup
+		ifNotNil: [:popup | popup applyChoice: blocks]
+		ifNil: [anEditor do: (SBReplaceMultipleCommand new target: aBlock replacers: blocks)]
 ]
