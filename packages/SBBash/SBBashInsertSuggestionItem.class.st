@@ -61,5 +61,5 @@ SBBashInsertSuggestionItem >> selector: aString [
 { #category : #'as yet unclassified' }
 SBBashInsertSuggestionItem >> useSuggestionOn: aCommand in: anEditor [
 
-	anEditor do: (aCommand morphs: morphs)
+	anEditor do: (aCommand morphs: (SBTSInputParser new adaptSlotsFor: morphs to: aCommand element))
 ]

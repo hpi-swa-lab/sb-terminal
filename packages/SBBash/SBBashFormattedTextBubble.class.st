@@ -15,6 +15,25 @@ SBBashFormattedTextBubble >> click: anEvent [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashFormattedTextBubble >> contents: aString [
+
+	self assert: aString notNil.
+	super contents: aString
+]
+
+{ #category : #'as yet unclassified' }
+SBBashFormattedTextBubble >> currentTextMorph [
+
+	^ focusable ifTrue: [super currentTextMorph] ifFalse: [nil]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashFormattedTextBubble >> cursorPositionsDo: aBlock shallow: aBoolean [
+
+	focusable ifTrue: [super cursorPositionsDo: aBlock shallow: aBoolean]
+]
+
+{ #category : #'as yet unclassified' }
 SBBashFormattedTextBubble >> focusable [
 
 	^ focusable

@@ -39,8 +39,8 @@ SBBashInput class >> confirm: aBlock [
 	<action>
 
 	| pty terminal command |
-	command := (aBlock orOwnerSuchThat: [:b | b type = #command]) sourceString.
 	terminal := aBlock containingArtefact.
+	command := (aBlock orOwnerSuchThat: [:b | b isTSBlock and: [b type = #command]]) ifNotNil: #sourceString ifNil: [^ self].
 	pty := terminal pty.
 	terminal state: #hidden.
 	terminal waitingForCommandString: command.
@@ -56,19 +56,23 @@ SBBashInput class >> loadInsertSubcommandsFrom: anInfoObject into: collection [
 	"TODO: machen, dass das richtig geparst wird --> command davor, aber nicht alle Blöcke nehmen"
 	subcommands do: [:subcmd |
 		collection add: (SBBashInsertSuggestionItem new
-			morph: (self parseToplevel: anInfoObject mainCommand, ' ', subcmd) childSandblocks first childSandblocks second
-			previewOnly: true)]
+			morphs: {
+				(self blockFor: #word)
+					contents: subcmd;
+					yourself}
+			editor: anInfoObject sandblockEditor)]
 ]
 
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadInsertSuggestionsFrom: anInfoObject into: collection [
-
+	
+	anInfoObject commandObject ifNil: [^{}].
 	anInfoObject commandObject options do: [:option | | morphs flagInfo |
 		flagInfo := SBBashFlagInformation new
 			description: (option at: #description);
 			flags: (option at: #flags);
-			arguments: (option at: #arguments);
-			optionals: (option at: #optionals).
+			arguments: ((option at: #arguments) ifNil: [{}]);
+			optionals: ((option at: #optionals) ifNil: [{}]).
 		
 		morphs := OrderedCollection new.
 		flagInfo arguments
@@ -108,6 +112,7 @@ SBBashInput class >> loadManpageFor: anInfoObject [
 SBBashInput class >> loadOnlyNextSubcommandsFor: anInfoObject [
 
 	| subcommands |
+	anInfoObject commandObject ifNil: [^{}].
 	subcommands := anInfoObject commandObject subcommands collect: [:cmd | | from upto |
 		from := anInfoObject mainCommand size + 2.
 		upto := (cmd findString: ' ' startingAt: from) - 1.
@@ -127,20 +132,20 @@ SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 	subcommands do: [:subcmd |
 		(subcmd findString: anInfoObject searchString) > 0 ifTrue: [
 			collection add: (SBBashTSBlockSuggestion new
-				blocks: {
-					(self parseToplevel: anInfoObject mainCommand, (' ', subcmd)) childSandblocks first childSandblocks second}
+				blocks: {(self blockFor: #word) contents: subcmd}
 				in: anInfoObject sandblockEditor)]]
 ]
 
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
-
+	
+	anInfoObject commandObject ifNil: [^{}].
 	anInfoObject commandObject options do: [:option | | morphs flagInfo |
 		flagInfo := SBBashFlagInformation new
 			description: (option at: #description);
 			flags: (option at: #flags);
-			arguments: (option at: #arguments);
-			optionals: (option at: #optionals).
+			arguments: ((option at: #arguments) ifNil: [1 halt.{}]);
+			optionals: ((option at: #optionals) ifNil: [{}]).
 		
 		morphs := OrderedCollection new.
 		flagInfo arguments
