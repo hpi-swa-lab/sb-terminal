@@ -39,8 +39,8 @@ SBBashInput class >> confirm: aBlock [
 	<action>
 
 	| pty terminal command |
-	command := (aBlock orOwnerSuchThat: [:b | b type = #command]) sourceString.
 	terminal := aBlock containingArtefact.
+	command := (aBlock orOwnerSuchThat: [:b | b isTSBlock and: [b type = #command]]) ifNotNil: #sourceString ifNil: [^ self].
 	pty := terminal pty.
 	terminal state: #hidden.
 	terminal waitingForCommandString: command.
@@ -65,7 +65,8 @@ SBBashInput class >> loadInsertSubcommandsFrom: anInfoObject into: collection [
 
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadInsertSuggestionsFrom: anInfoObject into: collection [
-
+	
+	anInfoObject commandObject ifNil: [^{}].
 	anInfoObject commandObject options do: [:option | | morphs flagInfo |
 		flagInfo := SBBashFlagInformation new
 			description: (option at: #description);
@@ -111,6 +112,7 @@ SBBashInput class >> loadManpageFor: anInfoObject [
 SBBashInput class >> loadOnlyNextSubcommandsFor: anInfoObject [
 
 	| subcommands |
+	anInfoObject commandObject ifNil: [^{}].
 	subcommands := anInfoObject commandObject subcommands collect: [:cmd | | from upto |
 		from := anInfoObject mainCommand size + 2.
 		upto := (cmd findString: ' ' startingAt: from) - 1.
@@ -136,12 +138,13 @@ SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
-
+	
+	anInfoObject commandObject ifNil: [^{}].
 	anInfoObject commandObject options do: [:option | | morphs flagInfo |
 		flagInfo := SBBashFlagInformation new
 			description: (option at: #description);
 			flags: (option at: #flags);
-			arguments: ((option at: #arguments) ifNil: [{}]);
+			arguments: ((option at: #arguments) ifNil: [1 halt.{}]);
 			optionals: ((option at: #optionals) ifNil: [{}]).
 		
 		morphs := OrderedCollection new.
