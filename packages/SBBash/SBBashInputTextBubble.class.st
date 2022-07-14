@@ -146,7 +146,7 @@ SBBashInputTextBubble >> suggestionsFrom: command into: collection [
 			collection add: (SBBashTSBlockSuggestion new
 				selector: suggestionText;
 				option: firstFlag;
-				command: command commandString)]]
+				terminalCommand: command commandString)]]
 ]
 
 { #category : #'as yet unclassified' }

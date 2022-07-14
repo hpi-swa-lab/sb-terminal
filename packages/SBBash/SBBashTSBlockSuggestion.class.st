@@ -3,15 +3,14 @@ Class {
 	#superclass : #SBTSBlockSuggestion,
 	#instVars : [
 		'option',
-		'command'
+		'terminalCommand'
 	],
 	#category : #SBBash
 }
 
 { #category : #'as yet unclassified' }
-SBBashTSBlockSuggestion >> _blocks: aCollection in: anEditor popup: aPopup [
+SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor popup: aPopup [
 
-	self selector: '' label: ''.
 	disambiguatePopup := aPopup.
 	command := SBReplaceMultipleCommand new
 		target: anEditor selection
@@ -21,12 +20,11 @@ SBBashTSBlockSuggestion >> _blocks: aCollection in: anEditor popup: aPopup [
 			addAllMorphs: command morphs;
 			width: 400;
 			imageForm)
-		previewOnly: false.
-	^ command
+		previewOnly: false
 ]
 
 { #category : #'as yet unclassified' }
-SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor popup: aPopup [
+SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor popup_: aPopup [
 
 	super
 		blocks: (SBReplaceMultipleCommand new
@@ -34,18 +32,6 @@ SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor popup: aPopup [
 			replacers: (aCollection collect: [:m | m isTSBlock ifTrue: [m adaptSlotFor: anEditor selection slot] ifFalse: [m]]))
 		in: anEditor
 		popup: aPopup
-]
-
-{ #category : #'as yet unclassified' }
-SBBashTSBlockSuggestion >> command [
-
-	^ command
-]
-
-{ #category : #'as yet unclassified' }
-SBBashTSBlockSuggestion >> command: anObject [
-
-	command := anObject
 ]
 
 { #category : #'as yet unclassified' }
@@ -70,4 +56,16 @@ SBBashTSBlockSuggestion >> selector: aString [
 		contents: aString;
 		hResizing: #spaceFill;
 		maxWidth: 400)
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> terminalCommand [
+
+	^ terminalCommand
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> terminalCommand: anObject [
+
+	terminalCommand := anObject
 ]

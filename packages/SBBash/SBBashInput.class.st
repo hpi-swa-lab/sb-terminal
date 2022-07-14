@@ -156,14 +156,20 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 				selector: flagInfo description;
 				blocks: morphs in: anInfoObject sandblockEditor;
 				option: flagInfo firstFlag;
-				command: anInfoObject mainCommand).
+				terminalCommand: anInfoObject mainCommand).
 			"with optionals"
 			flagInfo optionals notEmpty ifTrue: [
 				morphs addAll: (flagInfo optionals collect: [:opt | (self parseToplevel: 'command ', (flagInfo firstFlag, ('=', opt))) childSandblocks first childSandblocks second]).
 				collection add: (SBBashTSBlockSuggestion new
 					blocks: morphs in: anInfoObject sandblockEditor;
 					option: flagInfo firstFlag;
-					command: anInfoObject mainCommand)]]]
+					terminalCommand: anInfoObject mainCommand)]]]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> suggestAlwaysFor: aBlock [
+
+	^ true
 ]
 
 { #category : #'as yet unclassified' }

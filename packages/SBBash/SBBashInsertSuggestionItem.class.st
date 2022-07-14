@@ -3,24 +3,12 @@ Class {
 	#superclass : #SBInsertSuggestionItem,
 	#instVars : [
 		'option',
-		'command',
+		'terminalCommand',
 		'blocks',
 		'morphs'
 	],
 	#category : #SBBash
 }
-
-{ #category : #'as yet unclassified' }
-SBBashInsertSuggestionItem >> command [
-
-	^ command
-]
-
-{ #category : #'as yet unclassified' }
-SBBashInsertSuggestionItem >> command: anObject [
-
-	command := anObject
-]
 
 { #category : #'as yet unclassified' }
 SBBashInsertSuggestionItem >> morphs: aCollection editor: anEditor [
@@ -56,6 +44,18 @@ SBBashInsertSuggestionItem >> selector: aString [
 		contents: aString;
 		hResizing: #spaceFill;
 		maxWidth: 400)
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> terminalCommand [
+
+	^ terminalCommand
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> terminalCommand: anObject [
+
+	terminalCommand := anObject
 ]
 
 { #category : #'as yet unclassified' }
