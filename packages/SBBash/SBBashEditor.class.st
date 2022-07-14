@@ -36,18 +36,21 @@ SBBashEditor >> initialize [
 		hResizing: #spaceFill;
 		vResizing: #spaceFill).
 	
-	self submorphs second addMorphBack: (SBColumn new
+	self submorphs second addMorphBack: (scroll := ScrollPane new
+		hResizing: #spaceFill;
+		vResizing: #spaceFill).
+	scroll scroller addMorphBack: (SBColumn new
 		addMorphBack: (synopsisBlock := SBBashFormattedTextBubble multiLine
 			placeholderText: 'No synopsis found';
 			focusable: false;
-			maxWidth: 200);
+			maxWidth: 250);
 		addMorphBack: (debugBlock := SBBashFormattedTextBubble multiLine
 			placeholderText: 'No debugoutput found';
 			focusable: false);
 		addMorphBack: (descriptionBlock := SBBashFormattedTextBubble multiLine
 			placeholderText: 'No description found';
 			focusable: false;
-			maxWidth: 200))
+			maxWidth: 250))
 ]
 
 { #category : #'as yet unclassified' }
