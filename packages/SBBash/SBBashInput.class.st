@@ -138,14 +138,14 @@ SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
-	
-	anInfoObject commandObject ifNil: [^{}].
+
+	anInfoObject commandObject ifNil: [^ {}].
 	anInfoObject commandObject options do: [:option | | morphs flagInfo |
 		flagInfo := SBBashFlagInformation new
 			description: (option at: #description);
 			flags: (option at: #flags);
-			arguments: ((option at: #arguments) ifNil: [1 halt.{}]);
-			optionals: ((option at: #optionals) ifNil: [{}]).
+			arguments: (option at: #arguments);
+			optionals: (option at: #optionals).
 		
 		morphs := OrderedCollection new.
 		flagInfo arguments
@@ -182,7 +182,7 @@ SBBashInput class >> suggestionsFor: aBlock [
 
 	| suggestions info terminal |
 	suggestions := OrderedCollection new.
-	(aBlock type = #word and: [aBlock parentSandblock type = #command]) ifFalse: [^ suggestions].
+	((aBlock type = #word and: [aBlock parentSandblock type = #command]) not and: [aBlock type ~= #flag]) ifTrue: [^ suggestions].
 	terminal := aBlock containingArtefact.
 	info := SBBashCommandInformation new
 		fullCommand: aBlock parentSandblock sourceString;

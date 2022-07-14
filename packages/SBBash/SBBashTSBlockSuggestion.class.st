@@ -9,6 +9,23 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> _blocks: aCollection in: anEditor popup: aPopup [
+
+	self selector: '' label: ''.
+	disambiguatePopup := aPopup.
+	command := SBReplaceMultipleCommand new
+		target: anEditor selection
+		replacers: (aCollection collect: [:m | m isTSBlock ifTrue: [m adaptSlotFor: anEditor selection slot] ifFalse: [m]]).
+	self
+		preview: (anEditor newSelectionContainer
+			addAllMorphs: command morphs;
+			width: 400;
+			imageForm)
+		previewOnly: false.
+	^ command
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor popup: aPopup [
 
 	super
@@ -53,12 +70,4 @@ SBBashTSBlockSuggestion >> selector: aString [
 		contents: aString;
 		hResizing: #spaceFill;
 		maxWidth: 400)
-]
-
-{ #category : #'as yet unclassified' }
-SBBashTSBlockSuggestion >> useSuggestionOn: aBlock in: anEditor [
-
-	disambiguatePopup
-		ifNotNil: [:popup | popup applyChoice: blocks]
-		ifNil: [anEditor do: (SBReplaceMultipleCommand new target: aBlock replacers: blocks)]
 ]
