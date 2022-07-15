@@ -30,16 +30,17 @@ SBBashEditor >> descriptionBlock [
 { #category : #'as yet unclassified' }
 SBBashEditor >> initialize [
 
+	| sidebarScroll |
 	super initialize.
 	
 	self openMorph: (SBBashTerminal new
 		hResizing: #spaceFill;
 		vResizing: #spaceFill).
 	
-	self submorphs second addMorphBack: (scroll := ScrollPane new
+	self submorphs second addMorphBack: (sidebarScroll := ScrollPane new
 		hResizing: #spaceFill;
 		vResizing: #spaceFill).
-	scroll scroller addMorphBack: (SBColumn new
+	sidebarScroll scroller addMorphBack: (SBColumn new
 		addMorphBack: (synopsisBlock := SBBashFormattedTextBubble multiLine
 			placeholderText: 'No synopsis found';
 			focusable: false;
