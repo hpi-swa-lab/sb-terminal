@@ -52,6 +52,7 @@ SBBashInputTextBubble >> loadManpageFor: fullCommandString into: collection [
 		ifNone: [].
 	command isNil
 		ifTrue: [ | commandString |
+			1 halt.
 			manpage := UnixProcess thisOSProcess waitForCommandOutput: 'cd ../manpages; ./create_manpage_completions.py -f "', fullCommandString, '"'.
 			manpage = '' ifTrue: [^ nil].
 			commandString := fullCommandString from: 1 to: fullCommandString lastSpacePosition.

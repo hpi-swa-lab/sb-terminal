@@ -163,7 +163,7 @@ SBBashTerminal >> launchBash [
 	(pty := PseudoTTY command: '/bin/bash' arguments: {'-i'}) isNil ifTrue: [^ self error: 'could not create process'].
 	
 	closed := false.
-	allCommands := (UnixProcess thisOSProcess waitForCommandOutput: 'ls /usr/share/man/man1/') lines collect: [:path | ((path upTo: $.) findTokens: '-_') joinSeparatedBy: ' '].
+	allCommands := (UnixProcess thisOSProcess waitForCommandOutput: 'ls ', SBBashEditor pathToManpages) lines collect: [:path | ((path upTo: $.) findTokens: '-_') joinSeparatedBy: ' '].
 	pty nextPutAll: 'PS1="\e]81m${PS1}\e]80m"'.
 	pty nextPut: Character return.
 	state := #output.
@@ -199,10 +199,7 @@ SBBashTerminal >> readDataFromBash [
 	(buf := pty peekUpToEnd) isNil ifTrue: [buf := pty upToEnd].
 	ps1 := '' asText.
 	output := '' asText.
-	self
-		readFrom: (SBWatch report: buf asString for: 406436996) readStream
-		writeInto: ps1
-		and: (SBWatch report: output for: 189930893).
+	self readFrom: buf asString readStream writeInto: ps1 and: output.
 	((commandBlocks submorphs size = 0) not and: (output = '') not) ifTrue: [Project current addDeferredUIMessage: [self currentCommandBlock output: output]].
 	(ps1 = '') not ifTrue: [
 		Project current addDeferredUIMessage: [ | newCommandBlock |

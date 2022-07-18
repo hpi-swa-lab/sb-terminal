@@ -98,7 +98,7 @@ SBBashInput class >> loadManpageFor: anInfoObject [
 		detect: [:c | c commandString = anInfoObject mainCommand]
 		ifNone: [].
 	command isNil ifTrue: [
-		manpage := UnixProcess thisOSProcess waitForCommandOutput: 'cd ../manpages/manpage_completions; ./create_manpage_completions.py -f "', anInfoObject mainCommand, '"'.
+		manpage := UnixProcess thisOSProcess waitForCommandOutput: './', (SBBashEditor pathToManpageCompletionScript, ' -f "'), anInfoObject mainCommand, '"'.
 		manpage = '' ifTrue: [^ nil].
 		command := self commandFrom: manpage.
 		command

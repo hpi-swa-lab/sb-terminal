@@ -10,6 +10,24 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SBBashEditor class >> pathToManpageCompletionScript [
+
+	^ '../manpages/manpage_completions/create_manpage_completions.py'
+]
+
+{ #category : #'as yet unclassified' }
+SBBashEditor class >> pathToManpageNameScript [
+
+	^ '../manpages/manpage_completions/get_manpage_names.py'
+]
+
+{ #category : #'as yet unclassified' }
+SBBashEditor class >> pathToManpages [
+
+	^ '/usr/share/man/man1/'
+]
+
+{ #category : #'as yet unclassified' }
 SBBashEditor class >> registerShortcuts: aProvider [
 
 	aProvider registerShortcut: Character tab do: #autocompleteFile
