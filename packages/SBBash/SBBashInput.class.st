@@ -24,17 +24,6 @@ SBBashInput class >> canAutocompleteFile: aBlock [
 ]
 
 { #category : #'as yet unclassified' }
-SBBashInput class >> commandFrom: manpage [
-
-	| json |
-	json := Json readFrom: manpage readStream.
-	^ SBBashCommand new
-		options: (json at: #options);
-		synopsis: (json at: #synopsis);
-		description: (json at: #description)
-]
-
-{ #category : #'as yet unclassified' }
 SBBashInput class >> confirm: aBlock [
 	<action>
 
@@ -49,6 +38,21 @@ SBBashInput class >> confirm: aBlock [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> loadCommandFromManpage: manpage for: anInfoObject [
+
+	| json |
+	json := Json readFrom: manpage readStream.
+	^ SBBashCommand new
+		commandString: anInfoObject mainCommand;
+		commandName: (json at: #name);
+		options: (json at: #options);
+		synopsis: (json at: #synopsis);
+		description: (json at: #description);
+		terminal: anInfoObject terminal;
+		subcommands: (json at: #commands)
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> loadInsertSubcommandsFrom: anInfoObject into: collection [
 
 	| subcommands |
@@ -56,11 +60,12 @@ SBBashInput class >> loadInsertSubcommandsFrom: anInfoObject into: collection [
 	"TODO: machen, dass das richtig geparst wird --> command davor, aber nicht alle Blöcke nehmen"
 	subcommands do: [:subcmd |
 		collection add: (SBBashInsertSuggestionItem new
+			selector: subcmd commandName;
 			morphs: {
-				(self blockFor: #word)
-					contents: subcmd;
-					yourself}
-			editor: anInfoObject sandblockEditor)]
+					(self blockFor: #word)
+						contents: subcmd commandString;
+						yourself}
+				editor: anInfoObject sandblockEditor)]
 ]
 
 { #category : #'as yet unclassified' }
@@ -100,10 +105,7 @@ SBBashInput class >> loadManpageFor: anInfoObject [
 	command isNil ifTrue: [
 		manpage := UnixProcess thisOSProcess waitForCommandOutput: './', (SBBashEditor pathToManpageCompletionScript, ' -f "'), anInfoObject mainCommand, '"'.
 		manpage = '' ifTrue: [^ nil].
-		command := self commandFrom: manpage.
-		command
-			commandString: anInfoObject mainCommand;
-			subcommands: (anInfoObject terminal allCommands select: [:cmd | (cmd findString: anInfoObject mainCommand, ' ') = 1]).
+		command := self loadCommandFromManpage: manpage for: anInfoObject.
 		anInfoObject terminal commands add: command].
 	anInfoObject commandObject: command
 ]
@@ -112,14 +114,20 @@ SBBashInput class >> loadManpageFor: anInfoObject [
 SBBashInput class >> loadOnlyNextSubcommandsFor: anInfoObject [
 
 	| subcommands |
-	anInfoObject commandObject ifNil: [^{}].
-	subcommands := anInfoObject commandObject subcommands collect: [:cmd | | from upto |
+	anInfoObject commandObject ifNil: [^ {}].
+	subcommands := anInfoObject commandObject subcommands collect: [:cmdObj | | from upto |
 		from := anInfoObject mainCommand size + 2.
-		upto := (cmd findString: ' ' startingAt: from) - 1.
-		upto < 0 ifTrue: [upto := cmd size].
-		cmd size >= from ifTrue: [cmd from: from to: upto]].
-	subcommands := subcommands select: [:cmd | cmd notNil].
-	subcommands := (subcommands collect: [:cmd | cmd -> true] into: OrderedDictionary new) keys.
+		upto := (cmdObj commandString findString: ' ' startingAt: from) - 1.
+		upto < 0 ifTrue: [upto := cmdObj commandString size].
+		cmdObj commandString size >= from ifTrue: [ | newCommandObject |
+			newCommandObject := cmdObj shallowCopy.
+			newCommandObject commandString: (cmdObj commandString from: from to: upto).
+			newCommandObject]].
+	subcommands := subcommands select: [:cmdObj | cmdObj notNil].
+	"subcommands := (subcommands
+		collect: [:cmdObj | cmdObj commandString -> true]
+		into: OrderedDictionary new) keys.
+	1 halt."
 	^ subcommands
 ]
 
@@ -129,11 +137,14 @@ SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 	| subcommands |
 	subcommands := self loadOnlyNextSubcommandsFor: anInfoObject.
 	"TODO: machen, dass das richtig geparst wird --> command davor, aber nicht alle Blöcke nehmen"
+	"in loadOnlyNextSubcmd kommt der aktuelle command rein"
 	subcommands do: [:subcmd |
-		(subcmd findString: anInfoObject searchString) > 0 ifTrue: [
+		(subcmd commandString findString: anInfoObject searchString) > 0 ifTrue: [
 			collection add: (SBBashTSBlockSuggestion new
-				blocks: {(self blockFor: #word) contents: subcmd}
-				in: anInfoObject sandblockEditor)]]
+				selector: subcmd commandName;
+				blocks: {(self blockFor: #word) contents: subcmd commandString}
+					in: anInfoObject sandblockEditor;
+				option: subcmd commandString)]]
 ]
 
 { #category : #'as yet unclassified' }
