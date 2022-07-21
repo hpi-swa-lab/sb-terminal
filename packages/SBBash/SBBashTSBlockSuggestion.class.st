@@ -18,7 +18,9 @@ SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor popup: aPopup [
 	self
 		preview: (anEditor newSelectionContainer
 			addAllMorphs: command morphs;
-			width: 400;
+			width: 800;
+			changeTableLayout;
+			listDirection: #leftToRight;
 			imageForm)
 		previewOnly: false
 ]

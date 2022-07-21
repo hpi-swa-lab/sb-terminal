@@ -51,25 +51,28 @@ SBBashEditor >> initialize [
 	| sidebarScroll |
 	super initialize.
 	
+	self width: 80 * 8 + (250 + 50).
 	self openMorph: (SBBashTerminal new
 		hResizing: #spaceFill;
 		vResizing: #spaceFill).
 	
 	self submorphs second addMorphBack: (sidebarScroll := ScrollPane new
-		hResizing: #spaceFill;
+		hResizing: #shrinkWrap;
 		vResizing: #spaceFill).
-	sidebarScroll scroller addMorphBack: (SBColumn new
-		addMorphBack: (synopsisBlock := SBBashFormattedTextBubble multiLine
-			placeholderText: 'No synopsis found';
-			focusable: false;
-			maxWidth: 250);
-		addMorphBack: (debugBlock := SBBashFormattedTextBubble multiLine
-			placeholderText: 'No debugoutput found';
-			focusable: false);
-		addMorphBack: (descriptionBlock := SBBashFormattedTextBubble multiLine
-			placeholderText: 'No description found';
-			focusable: false;
-			maxWidth: 250))
+	sidebarScroll scroller
+		addMorphBack: (SBColumn new
+			addMorphBack: (synopsisBlock := SBBashFormattedTextBubble multiLine
+				placeholderText: 'No synopsis found';
+				focusable: false;
+				maxWidth: 250);
+			addMorphBack: (debugBlock := SBBashFormattedTextBubble multiLine
+				placeholderText: 'No debugoutput found';
+				focusable: false);
+			addMorphBack: (descriptionBlock := SBBashFormattedTextBubble multiLine
+				placeholderText: 'No description found';
+				focusable: false;
+				maxWidth: 250));
+		layoutInset: 8
 ]
 
 { #category : #'as yet unclassified' }

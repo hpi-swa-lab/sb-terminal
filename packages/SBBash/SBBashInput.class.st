@@ -161,7 +161,9 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 		morphs := OrderedCollection new.
 		flagInfo arguments
 			ifEmpty: [morphs add: (self parseToplevel: 'command ', flagInfo firstFlag) childSandblocks first childSandblocks second]
-			ifNotEmpty: [morphs add: (self parseToplevel: 'command ', (flagInfo firstFlag, ('=', flagInfo arguments first))) childSandblocks first childSandblocks second].
+			ifNotEmpty: [ | allBlocks |
+				allBlocks := (self parseToplevel: 'command ', (flagInfo firstFlag, (' ', flagInfo arguments first))) childSandblocks first childSandblocks.
+				morphs addAll: {allBlocks second. allBlocks third}].
 		((flagInfo flagsJoined findString: anInfoObject searchString) > 0 or: (flagInfo description findString: anInfoObject searchString) > 0) ifTrue: [
 			collection add: (SBBashTSBlockSuggestion new
 				selector: flagInfo description;
@@ -170,7 +172,7 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 				terminalCommand: anInfoObject mainCommand).
 			"with optionals"
 			flagInfo optionals notEmpty ifTrue: [
-				morphs addAll: (flagInfo optionals collect: [:opt | (self parseToplevel: 'command ', (flagInfo firstFlag, ('=', opt))) childSandblocks first childSandblocks second]).
+				morphs := flagInfo optionals collect: [:opt | (self parseToplevel: 'command ', (flagInfo firstFlag, ('=', opt))) childSandblocks first childSandblocks second].
 				collection add: (SBBashTSBlockSuggestion new
 					blocks: morphs in: anInfoObject sandblockEditor;
 					option: flagInfo firstFlag;

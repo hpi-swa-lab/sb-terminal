@@ -46,6 +46,7 @@ SBBashCommandBlock >> initialize [
 		addMorphBack: (output := SBBashFormattedTextBubble multiLine
 			hResizing: #spaceFill;
 			vResizing: #shrinkWrap;
+			maxWidth: 80 * 8;
 			focusable: true;
 			visible: false;
 			focusable: false);
@@ -101,4 +102,10 @@ SBBashCommandBlock >> ps1: aString [
 	current := ps1 contents asString.
 	group := (current from: (current findString: ':') + 1 to: current size) findTokens: '/'.
 	ps1 contents: ((group collect: [:pathPart | pathPart = group last ifTrue: [pathPart] ifFalse: [pathPart first]]) joinSeparatedBy: '/')
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandBlock >> wasSelected [
+
+	self focus
 ]
