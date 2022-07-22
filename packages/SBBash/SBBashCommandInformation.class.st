@@ -38,10 +38,12 @@ SBBashCommandInformation >> fullCommand: aString [
 
 { #category : #'as yet unclassified' }
 SBBashCommandInformation >> mainCommand [
-	"maybe check if searchString is actually at the end of fullCommand?"
 
 	searchString
-		ifNil: [^ fullCommand]
+		ifNil: [
+			fullCommand last = Character space
+				ifTrue: [^ fullCommand from: 1 to: fullCommand size - 1]
+				ifFalse: [^ fullCommand]]
 		ifNotNil: [^ fullCommand from: 1 to: fullCommand size - searchString size - 1]
 ]
 

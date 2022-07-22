@@ -10,15 +10,27 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SBBashEditor class >> pathToAllManpageData [
+
+	^ self pathToManpageScripts, '../temp.data'
+]
+
+{ #category : #'as yet unclassified' }
 SBBashEditor class >> pathToManpageCompletionScript [
 
-	^ '../manpages/manpage_completions/create_manpage_completions.py'
+	^ self pathToManpageScripts, 'create_manpage_completions.py'
 ]
 
 { #category : #'as yet unclassified' }
 SBBashEditor class >> pathToManpageNameScript [
 
-	^ '../manpages/manpage_completions/get_manpage_names.py'
+	^ self pathToManpageScripts, 'get_manpage_names.py'
+]
+
+{ #category : #'as yet unclassified' }
+SBBashEditor class >> pathToManpageScripts [
+
+	^ '../manpages/manpage_completions/'
 ]
 
 { #category : #'as yet unclassified' }
@@ -73,6 +85,7 @@ SBBashEditor >> initialize [
 				focusable: false;
 				maxWidth: 250));
 		layoutInset: 8
+	"maxWidth: 250""maxWidth: 250"
 ]
 
 { #category : #'as yet unclassified' }

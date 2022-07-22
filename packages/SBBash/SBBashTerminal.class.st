@@ -163,7 +163,7 @@ SBBashTerminal >> launchBash [
 	(pty := PseudoTTY command: '/bin/bash' arguments: {'-i'}) isNil ifTrue: [^ self error: 'could not create process'].
 	
 	closed := false.
-	allCommands := (UnixProcess thisOSProcess waitForCommandOutput: 'ls ', SBBashEditor pathToManpages) lines collect: [:path | ((path upTo: $.) findTokens: '-_') joinSeparatedBy: ' '].
+	commands := (Json readFrom: (UnixProcess thisOSProcess waitForCommandOutput: 'cat ', SBBashEditor pathToAllManpageData) readStream) collect: [:cmd | SBBashCommand newFromJson: cmd forTerminal: self].
 	pty nextPutAll: 'PS1="\e]81m${PS1}\e]80m"'.
 	pty nextPut: Character return.
 	state := #output.

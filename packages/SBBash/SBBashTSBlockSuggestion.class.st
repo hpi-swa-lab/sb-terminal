@@ -9,6 +9,16 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor [
+
+	| generatedCommand |
+	generatedCommand := SBReplaceMultipleCommand new
+		target: anEditor selection
+		replacers: (aCollection collect: [:m | m isTSBlock ifTrue: [m adaptSlotFor: anEditor selection slot] ifFalse: [m]]).
+	self command: generatedCommand in: anEditor
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor popup: aPopup [
 
 	disambiguatePopup := aPopup.

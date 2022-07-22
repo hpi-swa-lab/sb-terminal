@@ -24,7 +24,7 @@ SBBashFormattedTextBubble >> contents: aString [
 { #category : #'as yet unclassified' }
 SBBashFormattedTextBubble >> currentTextMorph [
 
-	^ focusable ifTrue: [super currentTextMorph] ifFalse: [nil]
+	^ self focusable ifTrue: [super currentTextMorph] ifFalse: [nil]
 ]
 
 { #category : #'as yet unclassified' }
@@ -36,7 +36,7 @@ SBBashFormattedTextBubble >> cursorPositionsDo: aBlock shallow: aBoolean [
 { #category : #'as yet unclassified' }
 SBBashFormattedTextBubble >> focusable [
 
-	^ focusable
+	focusable ifNil: [^ true] ifNotNil: [^ focusable]
 ]
 
 { #category : #'as yet unclassified' }

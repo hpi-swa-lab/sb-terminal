@@ -47,7 +47,6 @@ SBBashCommandBlock >> initialize [
 			hResizing: #spaceFill;
 			vResizing: #shrinkWrap;
 			maxWidth: 80 * 8;
-			focusable: true;
 			visible: false;
 			focusable: false);
 		cellGap: 2;
