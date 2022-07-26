@@ -38,6 +38,25 @@ SBBashInput class >> confirm: aBlock [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> getSuggestionFromCommand: aCommandObject in: anEditor [
+
+	| selector upto contents |
+	selector := aCommandObject commandName.
+	selector size > 50 ifTrue: [selector := (selector from: 1 to: 47), '...'].
+	upto := (aCommandObject commandString findString: ' ') - 1.
+	upto < 0 ifTrue: [upto := aCommandObject commandString size].
+	contents := aCommandObject commandString from: 1 to: upto.
+	^ SBBashTSBlockSuggestion new
+		selector: selector;
+		blocks: {
+				(self blockFor: #word)
+					contents: contents;
+					yourself}
+			in: anEditor;
+		option: aCommandObject commandString
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> loadCommandFromManpage: manpage for: anInfoObject [
 
 	| json |
@@ -53,6 +72,24 @@ SBBashInput class >> loadCommandFromManpage: manpage for: anInfoObject [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> loadCommandsFrom: anInfoObject into: aCollection [
+
+	anInfoObject commandObject: (SBBashCommand new
+		commandString: '';
+		subcommands: anInfoObject terminal commands;
+		subcommandStrings: {};
+		options: {};
+		description: '';
+		synopsis: '';
+		terminal: anInfoObject terminal).
+	anInfoObject terminal commands do: [:cmd |
+		cmd commandString = anInfoObject searchString
+			ifTrue: [{self getSuggestionFromCommand: cmd in: anInfoObject sandblockEditor} addAllFirstTo: aCollection]
+			ifFalse: [(cmd commandString findString: anInfoObject searchString) > 0 ifTrue: [aCollection add: (self getSuggestionFromCommand: cmd in: anInfoObject sandblockEditor)]]].
+	anInfoObject terminal commands do: [:cmd | ((cmd commandName findString: anInfoObject searchString) > 0 and: [(cmd commandString findString: anInfoObject searchString) = 0]) ifTrue: [aCollection add: (self getSuggestionFromCommand: cmd in: anInfoObject sandblockEditor)]]
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> loadInsertSubcommandsFrom: anInfoObject into: collection [
 
 	| subcommands |
@@ -61,7 +98,7 @@ SBBashInput class >> loadInsertSubcommandsFrom: anInfoObject into: collection [
 		collection add: (SBBashInsertSuggestionItem new
 			selector: subcmd commandName;
 			morphs: {
-					(self blockFor: #command)
+					(self blockFor: #word)
 						contents: subcmd commandString;
 						yourself}
 				editor: anInfoObject sandblockEditor)]
@@ -117,7 +154,15 @@ SBBashInput class >> loadManpageFor: anInfoObject [
 	"this could also be a function in the info object"
 	command := anInfoObject terminal commands
 		detect: [:c | c commandString = anInfoObject mainCommand]
-		ifNone: [].
+		ifNone: [
+			SBBashCommand new
+				commandString: '';
+				subcommands: anInfoObject terminal commands;
+				subcommandStrings: {};
+				options: {};
+				description: '';
+				synopsis: '';
+				terminal: anInfoObject terminal].
 	command isNil ifTrue: [
 		1 halt.
 		manpage := UnixProcess thisOSProcess waitForCommandOutput: './', (SBBashEditor pathToManpageCompletionScript, ' -f "'), anInfoObject mainCommand, '"'.
@@ -153,8 +198,6 @@ SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 
 	| subcommands |
 	subcommands := self loadOnlyNextSubcommandsFor: anInfoObject.
-	"TODO: machen, dass das richtig geparst wird --> command davor, aber nicht alle Blöcke nehmen"
-	"in loadOnlyNextSubcmd kommt der aktuelle command rein"
 	subcommands do: [:subcmd |
 		(subcmd commandName findString: anInfoObject searchString) > 0 ifTrue: [
 			collection add: (SBBashTSBlockSuggestion new
@@ -234,13 +277,21 @@ SBBashInput class >> suggestionsFor: aBlock [
 
 	| suggestions info terminal |
 	suggestions := OrderedCollection new.
-	((aBlock type = #word and: [aBlock parentSandblock type = #command]) not and: [aBlock type ~= #flag]) ifTrue: [^ suggestions].
+	(aBlock type ~= #word and: [aBlock type ~= #flag]) ifTrue: [^ suggestions].
+	
+	"Könnte in eine Methode SBBashCommandInformation >> newFromBlock: aBlock"
 	terminal := aBlock containingArtefact.
 	info := SBBashCommandInformation new
 		fullCommand: aBlock parentSandblock sourceString;
 		searchString: aBlock sourceString;
 		terminal: terminal;
 		sandblockEditor: aBlock sandblockEditor.
+	
+	aBlock parentSandblock type = #'command_name' ifTrue: [
+		"reduce lag by only searching commands beyond a certain length"
+		info searchString size >= 3 ifTrue: [self loadCommandsFrom: info into: suggestions].
+		^ suggestions].
+	
 	self loadManpageFor: info.
 	self loadSubcommandsFrom: info into: suggestions.
 	self loadSuggestionsFrom: info into: suggestions.

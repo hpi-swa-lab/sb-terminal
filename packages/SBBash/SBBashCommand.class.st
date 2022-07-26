@@ -20,7 +20,7 @@ SBBashCommand class >> newFrom: anObject [
 	^ self new
 		commandName: anObject commandName;
 		commandString: anObject commandString;
-		subcommands: anObject subcommands;
+		subcommandStrings: anObject subcommands;
 		options: anObject options;
 		description: anObject description;
 		synopsis: anObject synopsis;
@@ -97,14 +97,16 @@ SBBashCommand >> subcommandStrings: aCollection [
 { #category : #'as yet unclassified' }
 SBBashCommand >> subcommands [
 
-	(subcommands isNil or: [subcommands isEmpty]) ifTrue: [subcommands := subcommandStrings collect: [:commandString | (terminal commands select: [:command | command commandString = commandString]) first]].
+	(subcommands isNil or: [subcommands isEmpty]) ifTrue: [
+		subcommands := subcommandStrings collect: [:commandString | terminal commands detect: [:command | command commandString = commandString] ifNone: []].
+		subcommands := subcommands reject: [:c | c isNil]].
 	^ subcommands
 ]
 
 { #category : #'as yet unclassified' }
 SBBashCommand >> subcommands: aCollection [
 
-	subcommandStrings := aCollection reject: [:e | e = commandString].
+	subcommands := aCollection reject: [:e | e commandString = commandString].
 	SBToggledCode comment: '' active: 0 do: {
 		[
 			Project current addDeferredUIMessage: [

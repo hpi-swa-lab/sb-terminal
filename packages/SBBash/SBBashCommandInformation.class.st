@@ -44,7 +44,10 @@ SBBashCommandInformation >> mainCommand [
 			fullCommand last = Character space
 				ifTrue: [^ fullCommand from: 1 to: fullCommand size - 1]
 				ifFalse: [^ fullCommand]]
-		ifNotNil: [^ fullCommand from: 1 to: fullCommand size - searchString size - 1]
+		ifNotNil: [
+			searchString = fullCommand
+				ifTrue: [^ '']
+				ifFalse: [^ fullCommand from: 1 to: fullCommand size - searchString size - 1]]
 ]
 
 { #category : #'as yet unclassified' }
