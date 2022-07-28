@@ -96,7 +96,7 @@ SBBashInput class >> loadCommandsFrom: anInfoObject into: aCollection [
 		synopsis: '';
 		terminal: anInfoObject terminal).
 	anInfoObject terminal commands do: [:cmd |
-		(cmd commandString includesSubstring: anInfoObject searchString)
+		(cmd commandString asLowercase includesSubstring: anInfoObject searchString asLowercase)
 			ifTrue: [
 				cmd commandString = anInfoObject searchString
 					ifTrue: [perfectFit := self getSuggestionFromCommand: cmd in: anInfoObject sandblockEditor]
@@ -218,7 +218,7 @@ SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 	| subcommands |
 	subcommands := self loadOnlyNextSubcommandsFor: anInfoObject.
 	subcommands do: [:subcmd |
-		(subcmd commandName findString: anInfoObject searchString) > 0 ifTrue: [
+		(subcmd commandName asLowercase includesSubstring: anInfoObject searchString asLowercase) ifTrue: [
 			collection add: (SBBashTSBlockSuggestion new
 				selector: subcmd commandName;
 				blocks: {
@@ -254,7 +254,7 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 						b lastDeepChild lastSubmorph placeholderText: flagInfo arguments first.
 						b]);
 					yourself)].
-		((flagInfo flagsJoined findString: anInfoObject searchString) > 0 or: (flagInfo description findString: anInfoObject searchString) > 0) ifTrue: [
+		((flagInfo flagsJoined asLowercase includesSubstring: anInfoObject searchString asLowercase) or: (flagInfo description asLowercase includesSubstring: anInfoObject searchString asLowercase)) ifTrue: [
 			collection add: (SBBashTSBlockSuggestion new
 				selector: flagInfo description;
 				blocks: morphs in: anInfoObject sandblockEditor;

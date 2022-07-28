@@ -82,7 +82,7 @@ SBBashInputTextBubble >> suggestions [
 
 	| commandString suggestions containsSpace command |
 	suggestions := OrderedCollection new.
-	containsSpace := (self contents findString: ' ') > 0.
+	containsSpace := self contents includesSubstring: ' '.
 	containsSpace ifFalse: [^ suggestions].
 	commandString := self contents.
 	"Either collect suggestions for current word or (end on whitespace) show all options for flags"
@@ -143,7 +143,7 @@ SBBashInputTextBubble >> suggestionsFrom: command into: collection [
 		flags ifNotEmpty: [firstFlag := flags first] ifEmpty: [firstFlag := ''].
 		flagsJoined := flags joinSeparatedBy: ', '.
 		suggestionText := flagsJoined, ': ', description.
-		((flagsJoined findString: current) > 0 or: (description findString: current) > 0) ifTrue: [
+		((flagsJoined asLowercase includesSubstring: current asLowercase) or: (description asLowercase includesSubstring: current asLowercase)) ifTrue: [
 			collection add: (SBBashTSBlockSuggestion new
 				selector: suggestionText;
 				option: firstFlag;
