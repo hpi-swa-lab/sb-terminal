@@ -42,7 +42,7 @@ SBBashInput class >> getSuggestionFromCommand: aCommandObject in: anEditor [
 
 	| selector upto contents |
 	selector := aCommandObject commandName.
-	selector size > 50 ifTrue: [selector := (selector from: 1 to: 47), '...'].
+	selector size > 100 ifTrue: [selector := (selector from: 1 to: 97), '...'].
 	upto := (aCommandObject commandString findString: ' ') - 1.
 	upto < 0 ifTrue: [upto := aCommandObject commandString size].
 	contents := aCommandObject commandString from: 1 to: upto.
@@ -74,6 +74,8 @@ SBBashInput class >> loadCommandFromManpage: manpage for: anInfoObject [
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadCommandsFrom: anInfoObject into: aCollection [
 
+	| perfectFit goodFits |
+	goodFits := OrderedCollection new.
 	anInfoObject commandObject: (SBBashCommand new
 		commandString: '';
 		subcommands: anInfoObject terminal commands;
@@ -83,10 +85,14 @@ SBBashInput class >> loadCommandsFrom: anInfoObject into: aCollection [
 		synopsis: '';
 		terminal: anInfoObject terminal).
 	anInfoObject terminal commands do: [:cmd |
-		cmd commandString = anInfoObject searchString
-			ifTrue: [{self getSuggestionFromCommand: cmd in: anInfoObject sandblockEditor} addAllFirstTo: aCollection]
-			ifFalse: [(cmd commandString findString: anInfoObject searchString) > 0 ifTrue: [aCollection add: (self getSuggestionFromCommand: cmd in: anInfoObject sandblockEditor)]]].
-	anInfoObject terminal commands do: [:cmd | ((cmd commandName findString: anInfoObject searchString) > 0 and: [(cmd commandString findString: anInfoObject searchString) = 0]) ifTrue: [aCollection add: (self getSuggestionFromCommand: cmd in: anInfoObject sandblockEditor)]]
+		(cmd commandString includesSubstring: anInfoObject searchString)
+			ifTrue: [
+				cmd commandString = anInfoObject searchString
+					ifTrue: [perfectFit := self getSuggestionFromCommand: cmd in: anInfoObject sandblockEditor]
+					ifFalse: [goodFits add: (self getSuggestionFromCommand: cmd in: anInfoObject sandblockEditor)]]
+			ifFalse: [(cmd commandName includesSubstring: anInfoObject searchString) ifTrue: [aCollection add: (self getSuggestionFromCommand: cmd in: anInfoObject sandblockEditor)]]].
+	aCollection addAllFirst: goodFits.
+	perfectFit ifNotNil: [aCollection addFirst: perfectFit]
 ]
 
 { #category : #'as yet unclassified' }
