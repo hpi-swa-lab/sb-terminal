@@ -83,6 +83,30 @@ SBBashInput class >> loadCommandFromManpage: manpage for: anInfoObject [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> loadCommandObjectFor: anInfoObject [
+
+	| command fallbackSubcommands |
+	fallbackSubcommands := OrderedCollection new.
+	"this could also be a function in the info object"
+	command := anInfoObject terminal commands
+		detect: [:c |
+			(c commandString includesSubstring: anInfoObject mainCommand, ' ') ifTrue: [fallbackSubcommands add: c].
+			c commandString = anInfoObject mainCommand]
+		ifNone: [ | subcommands |
+			SBToggledCode comment: '' active: 0 do: {[subcommands := anInfoObject terminal commands]}.
+			subcommands := fallbackSubcommands.
+			SBBashCommand new
+				commandString: '';
+				subcommands: subcommands;
+				subcommandStrings: {};
+				options: {};
+				description: 'Currently not a valid command';
+				synopsis: 'Currently not a valid command';
+				terminal: anInfoObject terminal].
+	anInfoObject commandObject: command
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> loadCommandsFrom: anInfoObject into: aCollection [
 
 	| perfectFit goodFits |
@@ -164,31 +188,6 @@ SBBashInput class >> loadInsertSuggestionsFrom: anInfoObject into: collection [
 			collection add: (SBBashInsertSuggestionItem new
 				morphs: morphs editor: anInfoObject sandblockEditor;
 				key: flagInfo firstFlag)]]
-]
-
-{ #category : #'as yet unclassified' }
-SBBashInput class >> loadManpageFor: anInfoObject [
-
-	| manpage command |
-	"this could also be a function in the info object"
-	command := anInfoObject terminal commands
-		detect: [:c | c commandString = anInfoObject mainCommand]
-		ifNone: [
-			SBBashCommand new
-				commandString: '';
-				subcommands: anInfoObject terminal commands;
-				subcommandStrings: {};
-				options: {};
-				description: '';
-				synopsis: '';
-				terminal: anInfoObject terminal].
-	command isNil ifTrue: [
-		1 halt.
-		manpage := UnixProcess thisOSProcess waitForCommandOutput: './', (SBBashEditor pathToManpageCompletionScript, ' -f "'), anInfoObject mainCommand, '"'.
-		manpage = '' ifTrue: [^ nil].
-		command := self loadCommandFromManpage: manpage for: anInfoObject.
-		anInfoObject terminal commands add: command].
-	anInfoObject commandObject: command
 ]
 
 { #category : #'as yet unclassified' }
@@ -313,7 +312,7 @@ SBBashInput class >> suggestionsFor: aBlock [
 		info searchString size >= 3 ifTrue: [self loadCommandsFrom: info into: suggestions].
 		^ self deduplicateBashSuggestions: suggestions].
 	
-	self loadManpageFor: info.
+	self loadCommandObjectFor: info.
 	self loadSubcommandsFrom: info into: suggestions.
 	self loadSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
@@ -339,7 +338,7 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 		sandblockEditor: container sandblockEditor.
 	aCommand index > 1 ifTrue: [info previousBlock: (container childSandblocks at: aCommand index - 1)].
 	
-	self loadManpageFor: info.
+	self loadCommandObjectFor: info.
 	self loadInsertSubcommandsFrom: info into: suggestions.
 	self loadInsertSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
