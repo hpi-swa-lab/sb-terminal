@@ -5,10 +5,23 @@ Class {
 		'option',
 		'terminalCommand',
 		'blocks',
-		'morphs'
+		'morphs',
+		'key'
 	],
 	#category : #SBBash
 }
+
+{ #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> key [
+
+	key ifNotNil: [^ key] ifNil: [^ option]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> key: aString [
+
+	key := aString
+]
 
 { #category : #'as yet unclassified' }
 SBBashInsertSuggestionItem >> morphs: aCollection editor: anEditor [

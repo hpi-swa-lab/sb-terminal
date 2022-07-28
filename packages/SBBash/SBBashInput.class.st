@@ -38,6 +38,16 @@ SBBashInput class >> confirm: aBlock [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> deduplicateBashSuggestions: aCollection [
+
+	| dict |
+	dict := OrderedDictionary new.
+	"alternatively something with groupBy --> könnte man auch anzeigen, wie viele weitere commands dahinterkommen"
+	aCollection reverseDo: [:suggestion | dict at: suggestion key put: suggestion].
+	^ dict values reverse
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> getSuggestionFromCommand: aCommandObject in: anEditor [
 
 	| selector upto contents |
@@ -53,7 +63,8 @@ SBBashInput class >> getSuggestionFromCommand: aCommandObject in: anEditor [
 					contents: contents;
 					yourself}
 			in: anEditor;
-		option: aCommandObject commandString
+		option: aCommandObject commandString;
+		key: contents
 ]
 
 { #category : #'as yet unclassified' }
@@ -107,7 +118,8 @@ SBBashInput class >> loadInsertSubcommandsFrom: anInfoObject into: collection [
 					(self blockFor: #word)
 						contents: subcmd commandString;
 						yourself}
-				editor: anInfoObject sandblockEditor)]
+				editor: anInfoObject sandblockEditor;
+			key: subcmd commandString)]
 ]
 
 { #category : #'as yet unclassified' }
@@ -138,7 +150,8 @@ SBBashInput class >> loadInsertSuggestionsFrom: anInfoObject into: collection [
 					yourself)].
 		collection add: (SBBashInsertSuggestionItem new
 			selector: flagInfo description;
-			morphs: morphs editor: anInfoObject sandblockEditor).
+			morphs: morphs editor: anInfoObject sandblockEditor;
+			key: flagInfo firstFlag).
 		"with optionals"
 		flagInfo optionals notEmpty ifTrue: [
 			morphs := flagInfo optionals collect: [:opt |
@@ -149,8 +162,8 @@ SBBashInput class >> loadInsertSuggestionsFrom: anInfoObject into: collection [
 						b]);
 					yourself].
 			collection add: (SBBashInsertSuggestionItem new
-				morphs: morphs
-				editor: anInfoObject sandblockEditor)]]
+				morphs: morphs editor: anInfoObject sandblockEditor;
+				key: flagInfo firstFlag)]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -213,7 +226,8 @@ SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 							contents: subcmd commandString;
 							yourself}
 					in: anInfoObject sandblockEditor;
-				option: subcmd commandString)]]
+				option: subcmd commandString;
+				key: subcmd commandString)]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -258,7 +272,8 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 				collection add: (SBBashTSBlockSuggestion new
 					blocks: morphs in: anInfoObject sandblockEditor;
 					option: flagInfo firstFlag;
-					terminalCommand: anInfoObject mainCommand)]]]
+					terminalCommand: anInfoObject mainCommand;
+					key: flagInfo firstFlag, 'optional')]]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -296,7 +311,7 @@ SBBashInput class >> suggestionsFor: aBlock [
 	aBlock parentSandblock type = #'command_name' ifTrue: [
 		"reduce lag by only searching commands beyond a certain length"
 		info searchString size >= 3 ifTrue: [self loadCommandsFrom: info into: suggestions].
-		^ suggestions].
+		^ self deduplicateBashSuggestions: suggestions].
 	
 	self loadManpageFor: info.
 	self loadSubcommandsFrom: info into: suggestions.
@@ -305,7 +320,7 @@ SBBashInput class >> suggestionsFor: aBlock [
 		terminal synopsis: info commandObject synopsis.
 		terminal description: info commandObject description.
 		terminal debugOutput: info mainCommand].
-	^ suggestions
+	^ self deduplicateBashSuggestions: suggestions
 ]
 
 { #category : #'as yet unclassified' }
@@ -323,13 +338,15 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 		terminal: terminal;
 		sandblockEditor: container sandblockEditor.
 	aCommand index > 1 ifTrue: [info previousBlock: (container childSandblocks at: aCommand index - 1)].
+	
 	self loadManpageFor: info.
 	self loadInsertSubcommandsFrom: info into: suggestions.
 	self loadInsertSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
 		terminal synopsis: info commandObject synopsis.
 		terminal description: info commandObject description].
-	^ suggestions
+	
+	^ self deduplicateBashSuggestions: suggestions
 ]
 
 { #category : #'as yet unclassified' }

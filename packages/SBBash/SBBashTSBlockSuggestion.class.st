@@ -3,7 +3,8 @@ Class {
 	#superclass : #SBTSBlockSuggestion,
 	#instVars : [
 		'option',
-		'terminalCommand'
+		'terminalCommand',
+		'key'
 	],
 	#category : #SBBash
 }
@@ -44,6 +45,18 @@ SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor popup_: aPopup [
 			replacers: (aCollection collect: [:m | m isTSBlock ifTrue: [m adaptSlotFor: anEditor selection slot] ifFalse: [m]]))
 		in: anEditor
 		popup: aPopup
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> key [
+
+	key ifNotNil: [^ key] ifNil: [^ option]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> key: aString [
+
+	key := aString
 ]
 
 { #category : #'as yet unclassified' }
