@@ -22,6 +22,7 @@ SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor [
 { #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor popup: aPopup [
 
+	"deprecated?"
 	disambiguatePopup := aPopup.
 	command := SBReplaceMultipleCommand new
 		target: anEditor selection
@@ -45,6 +46,21 @@ SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor popup_: aPopup [
 			replacers: (aCollection collect: [:m | m isTSBlock ifTrue: [m adaptSlotFor: anEditor selection slot] ifFalse: [m]]))
 		in: anEditor
 		popup: aPopup
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> command: aCommand in: anEditor popup: aPopup [
+
+	disambiguatePopup := aPopup.
+	self
+		preview: (anEditor newSelectionContainer
+			addAllMorphs: aCommand replacers;
+			changeTableLayout;
+			listDirection: #leftToRight;
+			width: 400;
+			imageForm)
+		previewOnly: false.
+	command := aCommand
 ]
 
 { #category : #'as yet unclassified' }

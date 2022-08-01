@@ -40,11 +40,28 @@ SBBashInput class >> confirm: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> deduplicateBashSuggestions: aCollection [
 
-	| dict |
-	dict := OrderedDictionary new.
-	"alternatively something with groupBy --> könnte man auch anzeigen, wie viele weitere commands dahinterkommen"
-	aCollection reverseDo: [:suggestion | dict at: suggestion key put: suggestion].
-	^ dict values reverse
+	| dict deduplicationDict sizesDict suggestionDict uniqSuggs uniqGroups |
+	dict := aCollection groupBy: [:suggestion | suggestion key].
+	sizesDict := dict collect: [:c | c value size].
+	suggestionDict := dict collect: [:c | c value first].
+	SBToggledCode
+		comment: ''
+		active: 0
+		do: {[orderedDict := dict withKeysSorted: [:k1 :k2 | (sizesDict at: k1) >= (sizesDict at: k2)]]}.
+	uniqSuggs := OrderedCollection new.
+	SBToggledCode comment: '' active: 0 do: {
+		[orderedDict keysDo: [:c | deduplicatedSuggestions add: ((suggestionDict at: c) option: (sizesDict at: c) printString)]]}.
+	
+	deduplicationDict := OrderedDictionary new.
+	aCollection reverseDo: [:suggestion | deduplicationDict at: suggestion key put: suggestion].
+	uniqSuggs := deduplicationDict keys reverse.
+	uniqGroups := OrderedCollection new.
+	uniqSuggs do: [:c | | uniqueSuggestion moreOptions |
+		uniqueSuggestion := suggestionDict at: c.
+		moreOptions := (sizesDict at: c) - 1.
+		moreOptions > 0 ifTrue: [uniqueSuggestion selector: moreOptions printString, ' more option(s)'].
+		uniqGroups add: uniqueSuggestion].
+	^ uniqGroups
 ]
 
 { #category : #'as yet unclassified' }
