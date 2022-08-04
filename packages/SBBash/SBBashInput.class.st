@@ -293,6 +293,12 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> showInsertHints [
+
+	^ false
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> suggestAlwaysFor: aBlock [
 
 	^ true

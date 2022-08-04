@@ -84,7 +84,9 @@ SBBashEditor >> initialize [
 				placeholderText: 'No description found';
 				focusable: false;
 				maxWidth: 250));
-		layoutInset: 8
+		layoutInset: 8.
+	
+	inputMapping useSuggestionViaCr: false
 	"maxWidth: 250""maxWidth: 250"
 ]
 

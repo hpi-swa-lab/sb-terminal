@@ -54,7 +54,7 @@ SBBashTSBlockSuggestion >> command: aCommand in: anEditor popup: aPopup [
 	disambiguatePopup := aPopup.
 	self
 		preview: (anEditor newSelectionContainer
-			addAllMorphs: aCommand replacers;
+			addAllMorphs: aCommand morphs;
 			changeTableLayout;
 			listDirection: #leftToRight;
 			width: 400;
