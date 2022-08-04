@@ -2848,6 +2848,12 @@ SBBashInput class >> loadCommandsFrom: anInfoObject into: aCollection [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> loadInsertFileNameCompletionsFrom: anInfoObject into: aCollection [
+
+	
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> loadInsertSubcommandsFrom: anInfoObject into: collection [
 
 	| subcommands |
@@ -3073,6 +3079,7 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 		sandblockEditor: container sandblockEditor.
 	
 	self loadCommandObjectFor: info.
+	self loadInsertFileNameCompletionsFrom: info into: suggestions.
 	info fullCommand = '' ifFalse: [self loadInsertSubcommandsFrom: info into: suggestions].
 	self loadInsertSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
