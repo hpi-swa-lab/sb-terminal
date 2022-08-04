@@ -110,3 +110,13 @@ SBBashTSBlockSuggestion >> terminalCommand: anObject [
 
 	terminalCommand := anObject
 ]
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> useSuggestionOn: aBlock in: anEditor [
+
+	disambiguatePopup ifNotNil: [:popup | popup applyCommand: command] ifNil: [
+		anEditor do: command.
+		anEditor selection ifNotNil: [
+			anEditor selection startInputAtEnd.
+			anEditor performForSelection: #moveCursorRight]]
+]

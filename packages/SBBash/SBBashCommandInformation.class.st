@@ -39,15 +39,10 @@ SBBashCommandInformation >> fullCommand: aString [
 { #category : #'as yet unclassified' }
 SBBashCommandInformation >> mainCommand [
 
-	searchString
-		ifNil: [
-			fullCommand last = Character space
-				ifTrue: [^ fullCommand from: 1 to: fullCommand size - 1]
-				ifFalse: [^ fullCommand]]
-		ifNotNil: [
-			searchString = fullCommand
-				ifTrue: [^ '']
-				ifFalse: [^ fullCommand from: 1 to: fullCommand size - searchString size - 1]]
+	searchString ifNil: [^ self trimFlagsFrom: fullCommand] ifNotNil: [
+		searchString = fullCommand
+			ifTrue: [^ '']
+			ifFalse: [^ self trimFlagsFrom: (fullCommand from: 1 to: fullCommand size - searchString size - 1)]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -96,4 +91,12 @@ SBBashCommandInformation >> terminal [
 SBBashCommandInformation >> terminal: anObject [
 
 	terminal := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandInformation >> trimFlagsFrom: aString [
+
+	| upTo |
+	upTo := aString findString: '-'.
+	upTo > 0 ifTrue: [^ aString from: 1 to: upTo - 2] ifFalse: [^ aString withBlanksTrimmed]
 ]
