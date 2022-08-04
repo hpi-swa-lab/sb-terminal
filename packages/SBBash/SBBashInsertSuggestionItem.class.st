@@ -74,8 +74,24 @@ SBBashInsertSuggestionItem >> terminalCommand: anObject [
 { #category : #'as yet unclassified' }
 SBBashInsertSuggestionItem >> useSuggestionOn: aCommand in: anEditor [
 
-	anEditor do: (aCommand morphs: (morphs gather: [ :morph | SBTSInputParser new adaptSlotsFor: {morph} to: aCommand element])).
+	| command |
+	command := aCommand element type = #flag_argument
+		ifTrue: [self wordInsertPositionAfterFlagInsert: aCommand]
+		ifFalse: [aCommand].
+	
+	anEditor do: (command morphs: (morphs gather: [ :morph | SBTSInputParser new adaptSlotsFor: {morph} to: command element])).
 	anEditor selection ifNotNil: [
 		anEditor selection startInputAtEnd.
 		anEditor performForSelection: #moveCursorRight]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> wordInsertPositionAfterFlagInsert: aCommand [
+
+	| takeNext |
+	takeNext := false.
+	aCommand container parentSandblock cursorPositionsDo: [:cursor |
+		(takeNext and: [cursor isInsert]) ifTrue: [^ cursor command].
+		(cursor isInsert and: [cursor command container = aCommand container]) ifTrue: [takeNext := true]].
+	self assert: false
 ]

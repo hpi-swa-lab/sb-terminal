@@ -1948,6 +1948,18 @@ SBBashInput class >> grammarJson [
         {
           "type": "SYMBOL",
           "name": "_flag_start"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "flag_argument"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         }
       ]
     },
