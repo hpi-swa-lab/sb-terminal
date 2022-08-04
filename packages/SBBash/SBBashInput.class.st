@@ -175,20 +175,21 @@ SBBashInput class >> loadInsertSuggestionsFrom: anInfoObject into: collection [
 			arguments: ((option at: #arguments) ifNil: [{}]);
 			optionals: ((option at: #optionals) ifNil: [{}]).
 		
-		morphs := OrderedCollection new.
 		"TODO: folgenden Blob in Methode auslagern?"
 		flagInfo arguments
 			ifEmpty: [
-				morphs add: ((SBBashInput blockFor: #flag)
-					contents: flagInfo firstFlag;
-					yourself)]
+				morphs := {
+					(SBBashInput blockFor: #flag)
+						contents: flagInfo firstFlag;
+						yourself}]
 			ifNotEmpty: [
-				morphs add: ((SBBashInput blockFor: #flag)
-					contents: flagInfo firstFlag;
-					addBlock: ((SBBashInput blockFor: #'flag_argument') in: [:b |
+				morphs := {
+					(SBBashInput blockFor: #flag)
+						contents: flagInfo firstFlag;
+						yourself.
+					(SBBashInput blockFor: #word) in: [:b |
 						b lastDeepChild lastSubmorph placeholderText: flagInfo arguments first.
-						b]);
-					yourself)].
+						b]}].
 		collection add: (SBBashInsertSuggestionItem new
 			selector: flagInfo description;
 			morphs: morphs editor: anInfoObject sandblockEditor;
@@ -256,20 +257,21 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 			flags: (option at: #flags);
 			arguments: (option at: #arguments);
 			optionals: (option at: #optionals).
-		
-		morphs := OrderedCollection new.
+			
 		flagInfo arguments
 			ifEmpty: [
-				morphs add: ((SBBashInput blockFor: #flag)
-					contents: flagInfo firstFlag;
-					yourself)]
+				morphs := {
+					(SBBashInput blockFor: #flag)
+						contents: flagInfo firstFlag;
+						yourself}]
 			ifNotEmpty: [
-				morphs add: ((SBBashInput blockFor: #flag)
-					contents: flagInfo firstFlag;
-					addBlock: ((SBBashInput blockFor: #'flag_argument') in: [:b |
+				morphs := {
+					(SBBashInput blockFor: #flag)
+						contents: flagInfo firstFlag;
+						yourself.
+					(SBBashInput blockFor: #word) in: [:b |
 						b lastDeepChild lastSubmorph placeholderText: flagInfo arguments first.
-						b]);
-					yourself)].
+						b]}].
 		((flagInfo flagsJoined asLowercase includesSubstring: anInfoObject searchString asLowercase) or: (flagInfo description asLowercase includesSubstring: anInfoObject searchString asLowercase)) ifTrue: [
 			collection add: (SBBashTSBlockSuggestion new
 				selector: flagInfo description;
@@ -344,16 +346,22 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 
 	| suggestions terminal info container |
 	suggestions := OrderedCollection new.
-	(aCommand element isTSChoice and: [(aCommand element alternatives anySatisfy: [:alt | alt type = #'_primary_expression']) not]) ifTrue: [^ suggestions].
+	((aCommand element isTSChoice and: [aCommand element alternatives noneSatisfy: [:alt | alt type = #'_primary_expression']]) and: [aCommand element type ~= #'flag_argument']) ifTrue: [^ suggestions].
 	container := aCommand container.
-	container childSandblocks ifEmpty: [^ suggestions].
+	SBToggledCode
+		comment: ''
+		active: 0
+		do: {[container childSandblocks ifEmpty: [^ suggestions]]}.
 	terminal := container containingArtefact.
+	
+	aCommand element type = #'flag_argument' ifTrue: [container := container parentSandblock].
 	
 	info := SBBashCommandInformation new
 		fullCommand: container sourceString;
 		terminal: terminal;
 		sandblockEditor: container sandblockEditor.
-	aCommand index > 1 ifTrue: [info previousBlock: (container childSandblocks at: aCommand index - 1)].
+	SBToggledCode comment: '' active: 0 do: {
+		[aCommand index > 1 ifTrue: [info previousBlock: (container childSandblocks at: aCommand index - 1)]]}.
 	
 	self loadCommandObjectFor: info.
 	self loadInsertSubcommandsFrom: info into: suggestions.

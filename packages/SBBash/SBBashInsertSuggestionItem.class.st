@@ -74,5 +74,8 @@ SBBashInsertSuggestionItem >> terminalCommand: anObject [
 { #category : #'as yet unclassified' }
 SBBashInsertSuggestionItem >> useSuggestionOn: aCommand in: anEditor [
 
-	anEditor do: (aCommand morphs: (SBTSInputParser new adaptSlotsFor: morphs to: aCommand element))
+	anEditor do: (aCommand morphs: (morphs gather: [ :morph | SBTSInputParser new adaptSlotsFor: {morph} to: aCommand element])).
+	anEditor selection ifNotNil: [
+		anEditor selection startInputAtEnd.
+		anEditor performForSelection: #moveCursorRight]
 ]

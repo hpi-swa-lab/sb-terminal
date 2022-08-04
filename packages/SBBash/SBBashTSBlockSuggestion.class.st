@@ -54,7 +54,7 @@ SBBashTSBlockSuggestion >> command: aCommand in: anEditor popup: aPopup [
 	disambiguatePopup := aPopup.
 	self
 		preview: (anEditor newSelectionContainer
-			addAllMorphs: aCommand replacers;
+			addAllMorphs: aCommand morphs;
 			changeTableLayout;
 			listDirection: #leftToRight;
 			width: 400;
@@ -109,4 +109,14 @@ SBBashTSBlockSuggestion >> terminalCommand [
 SBBashTSBlockSuggestion >> terminalCommand: anObject [
 
 	terminalCommand := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> useSuggestionOn: aBlock in: anEditor [
+
+	disambiguatePopup ifNotNil: [:popup | popup applyCommand: command] ifNil: [
+		anEditor do: command.
+		anEditor selection ifNotNil: [
+			anEditor selection startInputAtEnd.
+			anEditor performForSelection: #moveCursorRight]]
 ]
