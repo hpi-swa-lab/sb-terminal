@@ -75,15 +75,14 @@ SBBashInsertSuggestionItem >> terminalCommand: anObject [
 SBBashInsertSuggestionItem >> useSuggestionOn: aCommand in: anEditor [
 
 	| command |
-	command := aCommand element type = #'flag_argument'
+	command := aCommand element type = #flag_argument
 		ifTrue: [self wordInsertPositionAfterFlagInsert: aCommand]
 		ifFalse: [aCommand].
 	
-	anEditor do: (command morphs: (morphs gather: [:morph | SBTSInputParser new adaptSlotsFor: {morph} to: command element])).
+	anEditor do: (command morphs: (morphs gather: [ :morph | SBTSInputParser new adaptSlotsFor: {morph} to: command element])).
 	anEditor selection ifNotNil: [
-		anEditor selection contents ifNotEmpty: [
-			anEditor selection startInputAtEnd.
-			anEditor performForSelection: #moveCursorRight]]
+		anEditor selection startInputAtEnd.
+		anEditor performForSelection: #moveCursorRight]
 ]
 
 { #category : #'as yet unclassified' }
