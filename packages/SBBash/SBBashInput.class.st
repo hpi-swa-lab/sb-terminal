@@ -10,6 +10,12 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> alwaysEnlargeInsets [
+
+	^ false
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> autocompleteFile [
 	<action>
 	<actionValidIf: #canAutocompleteFile:>
@@ -129,27 +135,6 @@ SBBashInput class >> grammarJson [
           {
             "type": "SYMBOL",
             "name": "_statement"
-          },
-          {
-            "type": "CHOICE",
-            "members": [
-              {
-                "type": "SEQ",
-                "members": [
-                  {
-                    "type": "STRING",
-                    "value": "\n"
-                  },
-                  {
-                    "type": "SYMBOL",
-                    "name": "heredoc_body"
-                  }
-                ]
-              },
-              {
-                "type": "BLANK"
-              }
-            ]
           },
           {
             "type": "CHOICE",
