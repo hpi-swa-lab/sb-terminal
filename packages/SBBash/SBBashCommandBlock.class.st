@@ -40,7 +40,9 @@ SBBashCommandBlock >> initialize [
 				focusable: false);
 			addMorphBack: (input := (SBBashInput parseToplevel: '')
 				hResizing: #spaceFill;
-				vResizing: #spaceFill);
+				vResizing: #spaceFill;
+				layoutInset: 0;
+				minHeight: TextStyle defaultFont height);
 			hResizing: #spaceFill;
 			cellGap: 2);
 		addMorphBack: (output := SBBashFormattedTextBubble multiLine
