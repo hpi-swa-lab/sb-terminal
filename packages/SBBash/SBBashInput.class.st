@@ -3035,15 +3035,24 @@ SBBashInput class >> suggestionsFor2: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> suggestionsFor: aBlock [
 
-	| suggestions info terminal |
+	| suggestions info terminal searchString onlyShowFlags |
 	suggestions := OrderedCollection new.
 	(aBlock type ~= #word and: [aBlock type ~= #flag]) ifTrue: [^ suggestions].
 	
+	(aBlock sourceString startsWith: '-')
+		ifTrue: [
+			onlyShowFlags := true.
+			(aBlock sourceString startsWith: '--')
+				ifTrue: [searchString := aBlock sourceString from: (3 min: aBlock sourceString size)]
+				ifFalse: [searchString := aBlock sourceString from: (2 min: aBlock sourceString size)]]
+		ifFalse: [
+			onlyShowFlags := false.
+			searchString := aBlock sourceString].
 	"Könnte in eine Methode SBBashCommandInformation >> newFromBlock: aBlock"
 	terminal := aBlock containingArtefact.
 	info := SBBashCommandInformation new
 		fullCommand: aBlock parentSandblock sourceString;
-		searchString: aBlock sourceString;
+		searchString: searchString;
 		terminal: terminal;
 		sandblockEditor: aBlock sandblockEditor.
 	
@@ -3053,7 +3062,7 @@ SBBashInput class >> suggestionsFor: aBlock [
 		^ self deduplicateBashSuggestions: suggestions].
 	
 	self loadCommandObjectFor: info.
-	self loadSubcommandsFrom: info into: suggestions.
+	onlyShowFlags ifFalse: [self loadSubcommandsFrom: info into: suggestions].
 	self loadSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
 		terminal synopsis: info commandObject synopsis.
