@@ -24,7 +24,8 @@ SBBashFormattedTextBubble >> contents: aString [
 { #category : #'as yet unclassified' }
 SBBashFormattedTextBubble >> currentTextMorph [
 
-	^ self focusable ifTrue: [super currentTextMorph] ifFalse: [nil]
+	"^ self focusable ifTrue: [super currentTextMorph] ifFalse: [nil]"
+	^ super currentTextMorph
 ]
 
 { #category : #'as yet unclassified' }
