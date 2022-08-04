@@ -3063,10 +3063,6 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 	suggestions := OrderedCollection new.
 	((aCommand element isTSChoice and: [aCommand element alternatives noneSatisfy: [:alt | alt type = #'_primary_expression']]) and: [aCommand element type ~= #'flag_argument']) ifTrue: [^ suggestions].
 	container := aCommand container.
-	SBToggledCode
-		comment: ''
-		active: 0
-		do: {[container childSandblocks ifEmpty: [^ suggestions]]}.
 	terminal := container containingArtefact.
 	
 	aCommand element type = #'flag_argument' ifTrue: [container := container parentSandblock].
@@ -3075,11 +3071,9 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 		fullCommand: container sourceString;
 		terminal: terminal;
 		sandblockEditor: container sandblockEditor.
-	SBToggledCode comment: '' active: 0 do: {
-		[aCommand index > 1 ifTrue: [info previousBlock: (container childSandblocks at: aCommand index - 1)]]}.
 	
 	self loadCommandObjectFor: info.
-	self loadInsertSubcommandsFrom: info into: suggestions.
+	info fullCommand = '' ifFalse: [self loadInsertSubcommandsFrom: info into: suggestions].
 	self loadInsertSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
 		terminal synopsis: info commandObject synopsis.

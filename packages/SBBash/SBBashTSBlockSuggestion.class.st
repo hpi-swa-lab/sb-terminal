@@ -117,11 +117,6 @@ SBBashTSBlockSuggestion >> useSuggestionOn: aBlock in: anEditor [
 	disambiguatePopup ifNotNil: [:popup | popup applyCommand: command] ifNil: [
 		anEditor do: command.
 		anEditor selection ifNotNil: [
-			"look for a morph that is all empty --> probably best place to start input. otherwise, we move after all the blocks, to the next input position"
-			command morphs
-				detect: [:morph | morph contents isEmpty]
-				ifFound: [:morph | morph startInputAtStart]
-				ifNone: [
-					anEditor selection startInputAtEnd.
-					anEditor performForSelection: #moveCursorRight]]]
+			anEditor selection startInputAtEnd.
+			anEditor performForSelection: #moveCursorRight]]
 ]
