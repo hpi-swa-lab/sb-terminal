@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'ps1',
 		'output',
-		'input'
+		'input',
+		'commandString'
 	],
 	#category : #SBBash
 }
@@ -17,6 +18,18 @@ SBBashCommandBlock >> addInput: aString [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashCommandBlock >> commandString [
+
+	commandString ifNotNil: [^ commandString] ifNil: [^ self input]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandBlock >> commandString: aString [
+
+	commandString := aString
+]
+
+{ #category : #'as yet unclassified' }
 SBBashCommandBlock >> floating [
 
 	^ true
@@ -25,7 +38,7 @@ SBBashCommandBlock >> floating [
 { #category : #'as yet unclassified' }
 SBBashCommandBlock >> focus [
 
-	input startInputAtEnd
+	input childSandblocks first startInputAtEnd
 ]
 
 { #category : #'as yet unclassified' }
@@ -38,11 +51,14 @@ SBBashCommandBlock >> initialize [
 			addMorphBack: (ps1 := SBBashFormattedTextBubble multiLine
 				vResizing: #shrinkWrap;
 				focusable: false);
-			addMorphBack: (input := (SBBashInput parseToplevel: '')
-				hResizing: #spaceFill;
-				vResizing: #spaceFill;
-				layoutInset: 0;
-				minHeight: TextStyle defaultFont height);
+			addMorphBack: (input := SBBlock new
+				addMorphBack: ((SBBashInput parseToplevel: '')
+					hResizing: #spaceFill;
+					vResizing: #spaceFill;
+					layoutInset: 0;
+					minHeight: TextStyle defaultFont height);
+				vResizing: #shrinkWrap;
+				hResizing: #shrinkWrap);
 			hResizing: #spaceFill;
 			cellGap: 2);
 		addMorphBack: (output := SBBashFormattedTextBubble multiLine
@@ -60,13 +76,18 @@ SBBashCommandBlock >> initialize [
 { #category : #'as yet unclassified' }
 SBBashCommandBlock >> input [
 
-	^ input contents
+	^ input submorphs first sourceString
 ]
 
 { #category : #'as yet unclassified' }
 SBBashCommandBlock >> input: aString [
 
-	input contents: aString.
+	input submorphsDo: [:m | m delete].
+	input addMorphBack: ((SBBashInput parseToplevel: aString)
+		hResizing: #spaceFill;
+		vResizing: #spaceFill;
+		layoutInset: 0;
+		minHeight: TextStyle defaultFont height).
 	self moveCursorToEnd
 ]
 

@@ -35,9 +35,13 @@ SBBashInput class >> confirm: aBlock [
 
 	| pty terminal command |
 	terminal := aBlock containingArtefact.
-	command := (aBlock orOwnerSuchThat: [:b | b isTSBlock and: [b type = #command]]) ifNotNil: #sourceString ifNil: [^ self].
+	command := (aBlock orOwnerSuchThat: [:b | b isTSBlock and: [b type = #command]])
+		ifNotNil: #sourceString
+		ifNil: [^ self].
 	pty := terminal pty.
 	terminal state: #hidden.
+	terminal currentCommandBlock commandString: command.
+	terminal refreshCommandIndex.
 	terminal waitingForCommandString: command.
 	pty nextPutAll: command.
 	pty nextPut: Character return
@@ -2998,6 +3002,41 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 					option: flagInfo firstFlag;
 					terminalCommand: anInfoObject mainCommand;
 					key: flagInfo firstFlag, 'optional')]]]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> recallCommandDown: aBlock [
+	<action>
+	<actionValidId: #shouldEatUp>
+
+	| editor terminal currentCommandBlock |
+	editor := aBlock sandblockEditor.
+	terminal := aBlock containingArtefact.
+	currentCommandBlock := terminal currentCommandBlock.
+	currentCommandBlock input: terminal getSubsequentCommandString.
+	currentCommandBlock focus
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> recallCommandUp: aBlock [
+	<action>
+	<actionValidId: #shouldEatUp>
+
+	| editor terminal currentCommandString currentCommandBlock |
+	editor := aBlock sandblockEditor.
+	terminal := aBlock containingArtefact.
+	currentCommandBlock := terminal currentCommandBlock.
+	aBlock type ~= #program ifTrue: [
+		currentCommandString := aBlock parentSandblock sourceString.
+		currentCommandBlock commandString ifNil: [currentCommandBlock commandString: currentCommandString]].
+	currentCommandBlock input: terminal getPreviousCommandString.
+	currentCommandBlock focus
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> shouldEatUp [
+
+	^ true
 ]
 
 { #category : #'as yet unclassified' }

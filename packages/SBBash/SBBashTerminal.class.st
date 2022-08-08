@@ -4,6 +4,7 @@ Class {
 	#instVars : [
 		'commandBlocks',
 		'commands',
+		'currentCommandIndex',
 		'pty',
 		'closed',
 		'state',
@@ -17,6 +18,13 @@ Class {
 	],
 	#category : #SBBash
 }
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal class >> registerShortcuts: aProvider [
+
+	aProvider registerShortcut: Character arrowUp do: #recallCommandUp.
+	aProvider registerShortcut: Character arrowDown do: #recallCommandDown
+]
 
 { #category : #'as yet unclassified' }
 SBBashTerminal >> allCommands [
@@ -119,6 +127,28 @@ SBBashTerminal >> focus [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashTerminal >> getPreviousCommandString [
+
+	| commandString |
+	currentCommandIndex := currentCommandIndex > 1
+		ifTrue: [currentCommandIndex - 1]
+		ifFalse: [currentCommandIndex].
+	commandString := (commandBlocks submorphs at: currentCommandIndex) commandString.
+	^ commandString
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> getSubsequentCommandString [
+
+	| commandString |
+	currentCommandIndex := currentCommandIndex < commandBlocks childSandblocks size
+		ifTrue: [currentCommandIndex + 1]
+		ifFalse: [currentCommandIndex].
+	commandString := (commandBlocks submorphs at: currentCommandIndex) commandString.
+	^ commandString
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTerminal >> initialize [
 
 	super initialize.
@@ -140,6 +170,7 @@ SBBashTerminal >> initialize [
 		layoutInset: 4.
 	
 	commands := OrderedCollection new.
+	currentCommandIndex := 1.
 	monitorSemaphor := Semaphore new.
 	self launchBash
 ]
@@ -260,6 +291,12 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 					input next: waitingForCommandString size + 1 + ((waitingForCommandString occurrencesOf: Character cr) * 3).
 					state := #output]}
 			otherwise: [input next]]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> refreshCommandIndex [
+
+	currentCommandIndex := commandBlocks childSandblocks size + 1
 ]
 
 { #category : #'as yet unclassified' }
