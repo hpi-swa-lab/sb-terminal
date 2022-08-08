@@ -3065,18 +3065,19 @@ SBBashInput class >> suggestionsFor: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> suggestionsForInsert: aCommand [
 
-	| suggestions terminal info container |
+	| suggestions terminal info container editor |
 	suggestions := OrderedCollection new.
 	((aCommand element isTSChoice and: [aCommand element alternatives noneSatisfy: [:alt | alt type = #'_primary_expression']]) and: [aCommand element type ~= #'flag_argument']) ifTrue: [^ suggestions].
 	container := aCommand container.
 	terminal := container containingArtefact.
+	editor := container sandblockEditor.
 	
 	aCommand element type = #'flag_argument' ifTrue: [container := container parentSandblock].
 	
 	info := SBBashCommandInformation new
 		fullCommand: container sourceString;
 		terminal: terminal;
-		sandblockEditor: container sandblockEditor.
+		sandblockEditor: editor.
 	
 	self loadCommandObjectFor: info.
 	self loadInsertFileNameCompletionsFrom: info into: suggestions.
@@ -3086,6 +3087,7 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 		terminal synopsis: info commandObject synopsis.
 		terminal description: info commandObject description].
 	
+	editor suggestionMenu focusHint contents: 'strg + j to focus  |  type keywords to filter'.
 	^ self deduplicateBashSuggestions: suggestions
 ]
 
