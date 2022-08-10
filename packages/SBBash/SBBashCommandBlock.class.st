@@ -20,7 +20,7 @@ SBBashCommandBlock >> addInput: aString [
 { #category : #'as yet unclassified' }
 SBBashCommandBlock >> commandString [
 
-	commandString ifNotNil: [^ commandString] ifNil: [^ self input]
+	^ commandString
 ]
 
 { #category : #'as yet unclassified' }

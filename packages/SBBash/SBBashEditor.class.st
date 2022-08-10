@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'synopsisBlock',
 		'descriptionBlock',
-		'debugBlock'
+		'debugBlock',
+		'terminal'
 	],
 	#category : #SBBash
 }
@@ -64,7 +65,7 @@ SBBashEditor >> initialize [
 	super initialize.
 	
 	self width: 80 * 8 + (250 + 50).
-	self openMorph: (SBBashTerminal new
+	self openMorph: (terminal := SBBashTerminal new
 		hResizing: #spaceFill;
 		vResizing: #spaceFill).
 	
@@ -94,6 +95,17 @@ SBBashEditor >> initialize [
 SBBashEditor >> insertCommandRequest: aMorph near: aBlock before: aBoolean [
 
 	^ nil
+]
+
+{ #category : #'as yet unclassified' }
+SBBashEditor >> performShortcutFor: anEvent [
+	"auch bei backspace?"
+	"anEvent key isCharacter and:"
+
+	SBToggledCode comment: '' active: 0 do: {
+		[(anEvent key isCharacter and: [anEvent key isLetter or: [anEvent key isDigit]]) ifTrue: [terminal currentCommandBlock commandString: terminal newestCommandBlock input]]}.
+	terminal currentCommandBlock commandString: terminal newestCommandBlock input.
+	^ super performShortcutFor: anEvent
 ]
 
 { #category : #'as yet unclassified' }

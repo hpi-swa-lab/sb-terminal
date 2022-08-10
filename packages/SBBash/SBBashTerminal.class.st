@@ -73,7 +73,7 @@ SBBashTerminal >> commands: anObject [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> currentCommandBlock [
 
-	^ commandBlocks lastSubmorph
+	^ commandBlocks submorphs at: currentCommandIndex
 ]
 
 { #category : #'as yet unclassified' }
@@ -123,7 +123,7 @@ SBBashTerminal >> example [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> focus [
 
-	self currentCommandBlock focus
+	self newestCommandBlock focus
 ]
 
 { #category : #'as yet unclassified' }
@@ -133,7 +133,7 @@ SBBashTerminal >> getPreviousCommandString [
 	currentCommandIndex := currentCommandIndex > 1
 		ifTrue: [currentCommandIndex - 1]
 		ifFalse: [currentCommandIndex].
-	commandString := (commandBlocks submorphs at: currentCommandIndex) commandString.
+	commandString := self currentCommandBlock commandString.
 	^ commandString
 ]
 
@@ -144,7 +144,7 @@ SBBashTerminal >> getSubsequentCommandString [
 	currentCommandIndex := currentCommandIndex < commandBlocks childSandblocks size
 		ifTrue: [currentCommandIndex + 1]
 		ifFalse: [currentCommandIndex].
-	commandString := (commandBlocks submorphs at: currentCommandIndex) commandString.
+	commandString := self currentCommandBlock commandString.
 	^ commandString
 ]
 
@@ -208,6 +208,12 @@ SBBashTerminal >> monitorSemaphor [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashTerminal >> newestCommandBlock [
+
+	^ commandBlocks lastSubmorph
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTerminal >> outOfWorld: aWorld [
 
 	super outOfWorld: aWorld.
@@ -231,7 +237,7 @@ SBBashTerminal >> readDataFromBash [
 	ps1 := '' asText.
 	output := '' asText.
 	self readFrom: buf asString readStream writeInto: ps1 and: output.
-	((commandBlocks submorphs size = 0) not and: (output = '') not) ifTrue: [Project current addDeferredUIMessage: [self currentCommandBlock output: output]].
+	((commandBlocks submorphs size = 0) not and: (output = '') not) ifTrue: [Project current addDeferredUIMessage: [self newestCommandBlock output: output]].
 	(ps1 = '') not ifTrue: [
 		Project current addDeferredUIMessage: [ | newCommandBlock |
 			commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
@@ -277,7 +283,7 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 						state := #escape]].
 				[#autocomplete] -> [
 					"This is the part the user wrote"
-					self currentCommandBlock input: (input upTo: Character return).
+					self newestCommandBlock input: (input upTo: Character return).
 					state := #autocomplete2].
 				[#autocomplete2] -> [
 					"This is the part we autocomplete"

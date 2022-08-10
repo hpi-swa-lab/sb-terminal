@@ -40,7 +40,7 @@ SBBashInput class >> confirm: aBlock [
 		ifNil: [^ self].
 	pty := terminal pty.
 	terminal state: #hidden.
-	terminal currentCommandBlock commandString: command.
+	terminal newestCommandBlock commandString: command.
 	terminal refreshCommandIndex.
 	terminal waitingForCommandString: command.
 	pty nextPutAll: command.
@@ -3009,12 +3009,17 @@ SBBashInput class >> recallCommandDown: aBlock [
 	<action>
 	<actionValidId: #shouldEatUp>
 
-	| editor terminal currentCommandBlock |
+	| editor terminal newBlock cmdString |
 	editor := aBlock sandblockEditor.
 	terminal := aBlock containingArtefact.
-	currentCommandBlock := terminal currentCommandBlock.
-	currentCommandBlock input: terminal getSubsequentCommandString.
-	currentCommandBlock focus
+	newBlock := terminal newestCommandBlock.
+	cmdString := terminal getSubsequentCommandString.
+	cmdString
+		ifNil: [
+			newBlock input: ''.
+			newBlock commandString: '']
+		ifNotNil: [newBlock input: cmdString].
+	newBlock focus
 ]
 
 { #category : #'as yet unclassified' }
@@ -3022,15 +3027,21 @@ SBBashInput class >> recallCommandUp: aBlock [
 	<action>
 	<actionValidId: #shouldEatUp>
 
-	| editor terminal currentCommandString currentCommandBlock |
+	| editor terminal currentCmd newBlock |
 	editor := aBlock sandblockEditor.
 	terminal := aBlock containingArtefact.
-	currentCommandBlock := terminal currentCommandBlock.
+	newBlock := terminal newestCommandBlock.
 	aBlock type ~= #program ifTrue: [
-		currentCommandString := aBlock parentSandblock sourceString.
-		currentCommandBlock commandString ifNil: [currentCommandBlock commandString: currentCommandString]].
-	currentCommandBlock input: terminal getPreviousCommandString.
-	currentCommandBlock focus
+		currentCmd := aBlock parentSandblock sourceString.
+		newBlock commandString ifNil: [newBlock commandString: currentCmd]].
+	"good idea?"
+	SBToggledCode
+		comment: ''
+		active: 0
+		do: {[terminal currentCommandBlock input: terminal currentCommandBlock commandString]}.
+	
+	newBlock input: terminal getPreviousCommandString.
+	newBlock focus
 ]
 
 { #category : #'as yet unclassified' }
