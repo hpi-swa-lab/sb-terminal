@@ -5,7 +5,9 @@ Class {
 		'synopsisBlock',
 		'descriptionBlock',
 		'debugBlock',
-		'terminal'
+		'terminal',
+		'synopsisCaption',
+		'descriptionCaption'
 	],
 	#category : #SBBash
 }
@@ -72,20 +74,26 @@ SBBashEditor >> initialize [
 	self submorphs second addMorphBack: (sidebarScroll := ScrollPane new
 		hResizing: #shrinkWrap;
 		vResizing: #spaceFill).
-	sidebarScroll scroller
-		addMorphBack: (SBColumn new
-			addMorphBack: (synopsisBlock := SBBashFormattedTextBubble multiLine
-				placeholderText: 'No synopsis found';
-				focusable: false;
-				maxWidth: 250);
-			addMorphBack: (debugBlock := SBBashFormattedTextBubble multiLine
-				placeholderText: 'No debugoutput found';
-				focusable: false);
-			addMorphBack: (descriptionBlock := SBBashFormattedTextBubble multiLine
-				placeholderText: 'No description found';
-				focusable: false;
-				maxWidth: 250));
-		layoutInset: 8.
+	sidebarScroll scroller addMorphBack: (SBColumn new
+		addMorphBack: (synopsisCaption := SBTextBubble new contents: 'Synopsis:');
+		addMorphBack: (synopsisBlock := SBBashFormattedTextBubble multiLine
+			placeholderText: 'No synopsis found';
+			focusable: false;
+			maxWidth: 250;
+			minWidth: 250);
+		addMorphBack: (descriptionCaption := SBTextBubble new contents: 'Description:');
+		addMorphBack: (descriptionBlock := SBBashFormattedTextBubble multiLine
+			placeholderText: 'No description found';
+			focusable: false;
+			maxWidth: 250;
+			minWidth: 250);
+		layoutInset: 4;
+		cellGap: 4).
+	
+	debugBlock := SBBashFormattedTextBubble multiLine
+		placeholderText: 'Nothing';
+		focusable: false;
+		maxWidth: 250.
 	
 	inputMapping useSuggestionViaCr: false
 	"maxWidth: 250""maxWidth: 250"
@@ -112,4 +120,10 @@ SBBashEditor >> performShortcutFor: anEvent [
 SBBashEditor >> synopsisBlock [
 
 	^ synopsisBlock
+]
+
+{ #category : #'as yet unclassified' }
+SBBashEditor >> synopsisCaption [
+
+	^ synopsisCaption
 ]

@@ -332,6 +332,13 @@ SBBashTerminal >> state: aSymbol [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> synopsis: aString [
 
+	aString
+		ifNil: [
+			self sandblockEditor synopsisBlock emphasis: TextEmphasis normal.
+			self sandblockEditor synopsisCaption emphasis: TextEmphasis normal]
+		ifNotNil: [
+			self sandblockEditor synopsisBlock emphasis: TextEmphasis bold.
+			self sandblockEditor synopsisCaption emphasis: TextEmphasis normal].
 	self sandblockEditor synopsisBlock contents: (aString ifNil: ['']).
 	synopsis := aString
 ]

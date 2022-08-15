@@ -2821,8 +2821,8 @@ SBBashInput class >> loadCommandObjectFor: anInfoObject [
 				subcommands: subcommands;
 				subcommandStrings: {};
 				options: {};
-				description: 'Currently not a valid command';
-				synopsis: 'Currently not a valid command';
+				description: nil;
+				synopsis: nil;
 				terminal: anInfoObject terminal].
 	anInfoObject commandObject: command
 ]
@@ -3137,7 +3137,7 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 		terminal synopsis: info commandObject synopsis.
 		terminal description: info commandObject description].
 	
-	editor suggestionMenu focusHint contents: 'strg + j to focus  |  type keywords to filter'.
+	editor suggestionMenu focusHint contents: 'strg + j: focus  |  type keywords to filter  |  esc: hide suggestions'.
 	^ self deduplicateBashSuggestions: suggestions
 ]
 
