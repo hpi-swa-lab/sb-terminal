@@ -7,7 +7,9 @@ Class {
 		'searchString',
 		'previousBlock',
 		'commandObject',
-		'sandblockEditor'
+		'sandblockEditor',
+		'onlyShowFlags',
+		'onlyShowFileNames'
 	],
 	#category : #SBBash
 }
@@ -43,6 +45,30 @@ SBBashCommandInformation >> mainCommand [
 		searchString = fullCommand
 			ifTrue: [^ '']
 			ifFalse: [^ self trimFlagsFrom: (fullCommand from: 1 to: fullCommand size - searchString size - 1)]]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandInformation >> onlyShowFileNames [
+
+	^ onlyShowFileNames
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandInformation >> onlyShowFileNames: aBoolean [
+
+	onlyShowFileNames := aBoolean
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandInformation >> onlyShowFlags [
+
+	^ onlyShowFlags
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandInformation >> onlyShowFlags: aBoolean [
+
+	onlyShowFlags := aBoolean
 ]
 
 { #category : #'as yet unclassified' }

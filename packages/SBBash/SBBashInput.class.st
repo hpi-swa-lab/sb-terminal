@@ -30,6 +30,12 @@ SBBashInput class >> canAutocompleteFile: aBlock [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> canRecallCommand: aBlock [
+
+	^ aBlock sandblockEditor suggestionMenu canUseSuggestion not
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> confirm: aBlock [
 	<action>
 
@@ -2852,7 +2858,37 @@ SBBashInput class >> loadCommandsFrom: anInfoObject into: aCollection [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> loadFileNameCompletionsFrom: anInfoObject into: aCollection [
+
+	| currentFolder lastSlashPosition searchString searchPath allEntries |
+	anInfoObject onlyShowFlags ifTrue: [^ {}].
+	
+	currentFolder := UnixProcess thisOSProcess environmentAt: #PWD.
+	lastSlashPosition := anInfoObject searchString
+		findLastOccurrenceOfString: '/'
+		startingAt: 1.
+	searchString := anInfoObject searchString from: lastSlashPosition + 1.
+	searchPath := anInfoObject searchString from: 1 to: lastSlashPosition.
+	allEntries := ((FileDirectory on: currentFolder) / searchPath) entries collect: [:entry | entry baseName].
+	
+	allEntries do: [:entry |
+		(searchString = '' or: [entry asLowercase includesSubstring: searchString asLowercase]) ifTrue: [
+			aCollection add: (SBBashTSBlockSuggestion new
+				selector: searchPath, entry;
+				blocks: {
+						(self blockFor: #word)
+							contents: searchPath, entry;
+							yourself}
+					in: anInfoObject sandblockEditor;
+				option: searchPath, entry;
+				key: entry)].
+		
+		]
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> loadInsertFileNameCompletionsFrom: anInfoObject into: aCollection [
+	"check if synopsis expects a path?"
 
 	
 ]
@@ -2943,6 +2979,8 @@ SBBashInput class >> loadOnlyNextSubcommandsFor: anInfoObject [
 SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 
 	| subcommands |
+	(anInfoObject onlyShowFlags or: [anInfoObject onlyShowFileNames]) ifTrue: [^ {}].
+	
 	subcommands := self loadOnlyNextSubcommandsFor: anInfoObject.
 	subcommands do: [:subcmd |
 		(subcmd commandName asLowercase includesSubstring: anInfoObject searchString asLowercase) ifTrue: [
@@ -2960,6 +2998,7 @@ SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 
+	anInfoObject onlyShowFileNames ifTrue: [^ {}].
 	anInfoObject commandObject ifNil: [^ {}].
 	anInfoObject commandObject options do: [:option | | morphs flagInfo |
 		flagInfo := SBBashFlagInformation new
@@ -2967,7 +3006,7 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 			flags: (option at: #flags);
 			arguments: (option at: #arguments);
 			optionals: (option at: #optionals).
-			
+		
 		flagInfo arguments
 			ifEmpty: [
 				morphs := {
@@ -3007,7 +3046,7 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 { #category : #'as yet unclassified' }
 SBBashInput class >> recallCommandDown: aBlock [
 	<action>
-	<actionValidId: #shouldEatUp>
+	<actionValidIf: #canRecallCommand:>
 
 	| editor terminal newBlock cmdString |
 	editor := aBlock sandblockEditor.
@@ -3025,7 +3064,7 @@ SBBashInput class >> recallCommandDown: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> recallCommandUp: aBlock [
 	<action>
-	<actionValidId: #shouldEatUp>
+	<actionValidIf: #canRecallCommand:>
 
 	| editor terminal currentCmd newBlock |
 	editor := aBlock sandblockEditor.
@@ -3047,6 +3086,7 @@ SBBashInput class >> recallCommandUp: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> shouldEatUp [
 
+	1 halt.
 	^ true
 ]
 
@@ -3076,26 +3116,30 @@ SBBashInput class >> suggestionsFor2: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> suggestionsFor: aBlock [
 
-	| suggestions info terminal searchString onlyShowFlags |
+	| suggestions info terminal searchString onlyShowFlags onlyShowFileNames |
 	suggestions := OrderedCollection new.
 	(aBlock type ~= #word and: [aBlock type ~= #flag]) ifTrue: [^ suggestions].
 	
 	(aBlock sourceString startsWith: '-')
 		ifTrue: [
 			onlyShowFlags := true.
+			onlyShowFileNames := false.
 			(aBlock sourceString startsWith: '--')
 				ifTrue: [searchString := aBlock sourceString from: (3 min: aBlock sourceString size)]
 				ifFalse: [searchString := aBlock sourceString from: (2 min: aBlock sourceString size)]]
 		ifFalse: [
 			onlyShowFlags := false.
-			searchString := aBlock sourceString].
+			searchString := aBlock sourceString.
+			onlyShowFileNames := searchString includesSubstring: '/'].
 	"Könnte in eine Methode SBBashCommandInformation >> newFromBlock: aBlock"
 	terminal := aBlock containingArtefact.
 	info := SBBashCommandInformation new
 		fullCommand: aBlock parentSandblock sourceString;
 		searchString: searchString;
 		terminal: terminal;
-		sandblockEditor: aBlock sandblockEditor.
+		sandblockEditor: aBlock sandblockEditor;
+		onlyShowFlags: onlyShowFlags;
+		onlyShowFileNames: onlyShowFileNames.
 	
 	aBlock parentSandblock type = #'command_name' ifTrue: [
 		"reduce lag by only searching commands beyond a certain length"
@@ -3103,7 +3147,8 @@ SBBashInput class >> suggestionsFor: aBlock [
 		^ self deduplicateBashSuggestions: suggestions].
 	
 	self loadCommandObjectFor: info.
-	onlyShowFlags ifFalse: [self loadSubcommandsFrom: info into: suggestions].
+	self loadFileNameCompletionsFrom: info into: suggestions.
+	self loadSubcommandsFrom: info into: suggestions.
 	self loadSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
 		terminal synopsis: info commandObject synopsis.

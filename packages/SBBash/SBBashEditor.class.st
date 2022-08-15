@@ -112,6 +112,7 @@ SBBashEditor >> performShortcutFor: anEvent [
 
 	SBToggledCode comment: '' active: 0 do: {
 		[(anEvent key isCharacter and: [anEvent key isLetter or: [anEvent key isDigit]]) ifTrue: [terminal currentCommandBlock commandString: terminal newestCommandBlock input]]}.
+	
 	terminal currentCommandBlock commandString: terminal newestCommandBlock input.
 	^ super performShortcutFor: anEvent
 ]
