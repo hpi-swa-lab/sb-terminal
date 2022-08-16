@@ -48,8 +48,8 @@ SBBashInput class >> confirm: aBlock [
 	terminal state: #hidden.
 	terminal newestCommandBlock commandString: command.
 	terminal refreshCommandIndex.
-	"catch man commands and send them to a new terminal"
-	(command startsWith: 'man ') ifTrue: [command := 'gnome-terminal -- ', command].
+	"catch trouble commands and send them to a new terminal"
+	(self string: command startsWithAnyOf: {'man'. 'vim'. 'vi'. 'nano'}) ifTrue: [command := 'gnome-terminal -- ', command].
 	terminal waitingForCommandString: command.
 	pty nextPutAll: command.
 	pty nextPut: Character return
@@ -3095,6 +3095,13 @@ SBBashInput class >> shouldEatUp [
 { #category : #'as yet unclassified' }
 SBBashInput class >> showInsertHints [
 
+	^ false
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> string: aString startsWithAnyOf: aCollection [
+
+	aCollection do: [:string | ((aString startsWith: string, ' ') or: [aString = string]) ifTrue: [^ true]].
 	^ false
 ]
 
