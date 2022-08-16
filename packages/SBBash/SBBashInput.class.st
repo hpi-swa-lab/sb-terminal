@@ -48,6 +48,8 @@ SBBashInput class >> confirm: aBlock [
 	terminal state: #hidden.
 	terminal newestCommandBlock commandString: command.
 	terminal refreshCommandIndex.
+	"catch man commands and send them to a new terminal"
+	(command startsWith: 'man ') ifTrue: [command := 'gnome-terminal -- ', command].
 	terminal waitingForCommandString: command.
 	pty nextPutAll: command.
 	pty nextPut: Character return
