@@ -2860,7 +2860,7 @@ SBBashInput class >> loadCommandsFrom: anInfoObject into: aCollection [
 ]
 
 { #category : #'as yet unclassified' }
-SBBashInput class >> loadFileNameCompletionsFrom: anInfoObject into: aCollection [
+SBBashInput class >> loadDirectoryEntryCompletionsFrom: anInfoObject into: aCollection [
 
 	| currentFolder lastSlashPosition searchString searchPath allEntries |
 	anInfoObject onlyShowFlags ifTrue: [^ {}].
@@ -3156,7 +3156,7 @@ SBBashInput class >> suggestionsFor: aBlock [
 		^ self deduplicateBashSuggestions: suggestions].
 	
 	self loadCommandObjectFor: info.
-	self loadFileNameCompletionsFrom: info into: suggestions.
+	self loadDirectoryEntryCompletionsFrom: info into: suggestions.
 	self loadSubcommandsFrom: info into: suggestions.
 	self loadSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
