@@ -2874,9 +2874,17 @@ SBBashInput class >> loadDirectoryEntryCompletionsFrom: anInfoObject into: aColl
 	allEntries := ((FileDirectory on: currentFolder) / searchPath) entries.
 	
 	allEntries do: [:entry |
-		(searchString = '' or: [entry name asLowercase includesSubstring: searchString asLowercase]) ifTrue: [
+		(searchString = '' or: [entry name asLowercase includesSubstring: searchString asLowercase]) ifTrue: [ | selector icon |
+			entry isDirectory
+				ifTrue: [
+					icon := SBIcon iconFolder color: Color veryDarkGray.
+					selector := 'Directory']
+				ifFalse: [
+					icon := SBIcon iconFile color: Color veryLightGray.
+					selector := 'File'].
 			aCollection add: (SBBashTSBlockSuggestion new
-				selector: (entry isDirectory ifTrue: ['Directory'] ifFalse: ['File']);
+				icon: icon;
+				selector: selector;
 				blocks: {
 						(self blockFor: #word)
 							contents: searchPath, entry name;

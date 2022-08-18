@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'option',
 		'terminalCommand',
-		'key'
+		'key',
+		'icon'
 	],
 	#category : #SBBash
 }
@@ -61,6 +62,15 @@ SBBashTSBlockSuggestion >> command: aCommand in: anEditor popup: aPopup [
 			imageForm)
 		previewOnly: false.
 	command := aCommand
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> icon: anObject [
+
+	| container |
+	container := self firstSubmorph.
+	icon := anObject.
+	container addMorphFront: icon
 ]
 
 { #category : #'as yet unclassified' }
