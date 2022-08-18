@@ -49,7 +49,7 @@ SBBashInput class >> confirm: aBlock [
 	terminal newestCommandBlock commandString: command.
 	terminal refreshCommandIndex.
 	"catch trouble commands and send them to a new terminal"
-	(self string: command startsWithAnyOf: {'man'. 'vim'. 'vi'. 'nano'}) ifTrue: [command := 'gnome-terminal -- ', command].
+	(self string: command startsWithAnyOf: {'man'. 'vim'. 'vi'. 'nano'. 'htop'}) ifTrue: [command := 'gnome-terminal -- ', command].
 	terminal waitingForCommandString: command.
 	pty nextPutAll: command.
 	pty nextPut: Character return
@@ -2871,19 +2871,19 @@ SBBashInput class >> loadFileNameCompletionsFrom: anInfoObject into: aCollection
 		startingAt: 1.
 	searchString := anInfoObject searchString from: lastSlashPosition + 1.
 	searchPath := anInfoObject searchString from: 1 to: lastSlashPosition.
-	allEntries := ((FileDirectory on: currentFolder) / searchPath) entries collect: [:entry | entry baseName].
+	allEntries := ((FileDirectory on: currentFolder) / searchPath) entries.
 	
 	allEntries do: [:entry |
-		(searchString = '' or: [entry asLowercase includesSubstring: searchString asLowercase]) ifTrue: [
+		(searchString = '' or: [entry name asLowercase includesSubstring: searchString asLowercase]) ifTrue: [
 			aCollection add: (SBBashTSBlockSuggestion new
-				selector: searchPath, entry;
+				selector: (entry isDirectory ifTrue: ['Directory'] ifFalse: ['File']);
 				blocks: {
 						(self blockFor: #word)
-							contents: searchPath, entry;
+							contents: searchPath, entry name;
 							yourself}
 					in: anInfoObject sandblockEditor;
-				option: searchPath, entry;
-				key: entry)].
+				option: searchPath, entry name;
+				key: entry name)].
 		
 		]
 ]
