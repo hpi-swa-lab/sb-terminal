@@ -7,7 +7,9 @@ Class {
 		'debugBlock',
 		'terminal',
 		'synopsisCaption',
-		'descriptionCaption'
+		'descriptionCaption',
+		'examplesCaption',
+		'examplesBlock'
 	],
 	#category : #SBBash
 }
@@ -61,6 +63,12 @@ SBBashEditor >> descriptionBlock [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashEditor >> examplesBlock [
+
+	^ examplesBlock
+]
+
+{ #category : #'as yet unclassified' }
 SBBashEditor >> initialize [
 
 	| sidebarScroll |
@@ -78,6 +86,12 @@ SBBashEditor >> initialize [
 		addMorphBack: (synopsisCaption := SBTextBubble new contents: 'Synopsis:');
 		addMorphBack: (synopsisBlock := SBBashFormattedTextBubble multiLine
 			placeholderText: 'No synopsis found';
+			focusable: false;
+			maxWidth: 250;
+			minWidth: 250);
+		addMorphBack: (examplesCaption := SBTextBubble new contents: 'Examples:');
+		addMorphBack: (examplesBlock := SBBashFormattedTextBubble multiLine
+			placeholderText: 'No examples found';
 			focusable: false;
 			maxWidth: 250;
 			minWidth: 250);

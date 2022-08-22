@@ -16,6 +16,32 @@ SBBashInput class >> alwaysEnlargeInsets [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> attributesFrom: aString [
+
+	(aString = '' or: (aString = '0' or: aString = '00')) ifTrue: [^ OrderedCollection newFrom: {TextColor black}].
+	^ (aString findTokens: $;) collect: [:attribute |
+		attribute
+			caseOf: {
+				[#'30'] -> [TextColor black].
+				[#'31'] -> [TextColor red].
+				[#'32'] -> [TextColor color: Color green twiceDarker].
+				[#'33'] -> [TextColor color: Color yellow twiceDarker darker].
+				[#'34'] -> [TextColor blue].
+				[#'35'] -> [TextColor magenta].
+				[#'36'] -> [TextColor cyan].
+				[#'37'] -> [TextColor white].
+				[#'97'] -> [TextColor white].
+				[#'96'] -> [TextColor cyan].
+				[#'95'] -> [TextColor magenta].
+				[#'94'] -> [TextColor blue].
+				[#'93'] -> [TextColor color: Color yellow twiceDarker darker].
+				[#'92'] -> [TextColor color: Color green twiceDarker].
+				[#'91'] -> [TextColor red].
+				[#'90'] -> [TextColor black]}
+			otherwise: [TextColor gray]]
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> autocompleteFile [
 	<action>
 	<actionValidIf: #canAutocompleteFile:>
@@ -80,6 +106,38 @@ SBBashInput class >> deduplicateBashSuggestions: aCollection [
 		moreOptions > 0 ifTrue: [uniqueSuggestion selector: moreOptions printString, ' more option(s)'].
 		uniqGroups add: uniqueSuggestion].
 	^ uniqGroups
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> formatRawBash: input [
+
+	| sequence attributes prevState output state |
+	attributes := {TextColor black}.
+	output := '' asText.
+	state := #output.
+	[input atEnd] whileFalse: [
+		state
+			caseOf: {
+				[#escape] -> [
+					sequence := input upTo: $m.
+					(sequence beginsWith: '[')
+						ifTrue: [
+							"text attributes"
+							attributes := self attributesFrom: (sequence from: 2).
+							state := prevState]
+						ifFalse: ["side effects"
+						(sequence beginsWith: ']0;') ifTrue: [sequence := sequence, (input upTo: (Character value: 7))]]].
+				[#output] -> [ | outBuffer |
+					outBuffer := input upTo: Character escape.
+					outBuffer = Character lf asString ifFalse: [
+						output append: (outBuffer asText
+							addAllAttributes: attributes;
+							addAttribute: (TextFontReference toFont: TextStyle defaultFixedFont))].
+					input atEnd ifFalse: [
+						prevState := state.
+						state := #escape]]}
+			otherwise: [input next]].
+	^ output
 ]
 
 { #category : #'as yet unclassified' }
@@ -3197,7 +3255,8 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 	self loadInsertSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
 		terminal synopsis: info commandObject synopsis.
-		terminal description: info commandObject description].
+		terminal description: info commandObject description.
+		terminal examples: (self formatRawBash: (UnixProcess thisOSProcess waitForCommandOutput: 'tldr ', info mainCommand) readStream)].
 	
 	editor suggestionMenu focusHint contents: 'strg + j: focus  |  type keywords to filter  |  esc: hide suggestions'.
 	^ self deduplicateBashSuggestions: suggestions

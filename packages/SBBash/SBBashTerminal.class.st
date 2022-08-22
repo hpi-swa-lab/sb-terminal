@@ -14,7 +14,8 @@ Class {
 		'description',
 		'waitingForCommandString',
 		'debugOutput',
-		'allCommands'
+		'allCommands',
+		'examples'
 	],
 	#category : #SBBash
 }
@@ -112,12 +113,10 @@ SBBashTerminal >> evaluateEscapeSequence: sequence prevState: prevState [
 ]
 
 { #category : #'as yet unclassified' }
-SBBashTerminal >> example [
+SBBashTerminal >> examples: aString [
 
-	SBMorphExample
-		setUp: [self class new]
-		cases: {SBMorphExampleCase name: 'example 1' caseBlock: [:m | m]}
-		extent: 300 @ 300
+	self sandblockEditor examplesBlock contents: self sandblockEditor examplesBlock contents asText, aString.
+	examples := aString
 ]
 
 { #category : #'as yet unclassified' }
