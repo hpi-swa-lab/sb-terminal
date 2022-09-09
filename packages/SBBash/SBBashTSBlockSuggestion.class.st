@@ -133,5 +133,9 @@ SBBashTSBlockSuggestion >> useSuggestionOn: aBlock in: anEditor [
 				ifFound: [:morph | morph startInputAtStart]
 				ifNone: [
 					anEditor selection startInputAtEnd.
-					anEditor performForSelection: #moveCursorRight]]]
+					"for suggestions for directories (key ends with '/'), we want to keep the selection in the last block; for other suggestions, we want to end up at the insert position behind the last block"
+					(key isNil or: [(key endsWith: '/') not]) ifTrue: [
+						"??? not sure"
+						anEditor performForSelection: #moveCursorRight.
+						anEditor performForSelection: #moveCursorRight]]]]
 ]

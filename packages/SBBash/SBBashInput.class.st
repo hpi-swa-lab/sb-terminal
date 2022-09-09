@@ -2932,24 +2932,24 @@ SBBashInput class >> loadDirectoryEntryCompletionsFrom: anInfoObject into: aColl
 	allEntries := ((FileDirectory on: currentFolder) / searchPath) entries.
 	
 	allEntries do: [:entry |
-		(searchString = '' or: [entry name asLowercase includesSubstring: searchString asLowercase]) ifTrue: [ | selector icon |
+		(searchString = '' or: [entry name asLowercase includesSubstring: searchString asLowercase]) ifTrue: [ | name icon |
 			entry isDirectory
 				ifTrue: [
-					icon := SBIcon iconFolder color: Color veryDarkGray.
-					selector := 'Directory']
+					icon := SBIcon iconFolder color: (Color r: 0.25 g: 0.25 b: 0.25).
+					name := entry name, '/']
 				ifFalse: [
-					icon := SBIcon iconFile color: Color veryLightGray.
-					selector := 'File'].
+					icon := SBIcon iconFile color: (Color r: 0.75 g: 0.75 b: 0.75).
+					name := entry name].
 			aCollection add: (SBBashTSBlockSuggestion new
 				icon: icon;
-				selector: selector;
+				selector: name;
 				blocks: {
 						(self blockFor: #word)
-							contents: searchPath, entry name;
+							contents: searchPath, name;
 							yourself}
 					in: anInfoObject sandblockEditor;
-				option: searchPath, entry name;
-				key: entry name)].
+				option: searchPath, name;
+				key: name)].
 		
 		]
 ]
