@@ -233,15 +233,22 @@ SBBashTerminal >> readDataFromBash [
 	(pty isConnected not or: [closed]) ifTrue: [^ nil].
 	Processor yield.
 	(buf := pty peekUpToEnd) isNil ifTrue: [buf := pty upToEnd].
+	Transcript showln: buf asString.
 	ps1 := '' asText.
 	output := '' asText.
 	self readFrom: buf asString readStream writeInto: ps1 and: output.
 	((commandBlocks submorphs size = 0) not and: (output = '') not) ifTrue: [Project current addDeferredUIMessage: [self newestCommandBlock output: output]].
-	(ps1 = '') not ifTrue: [
-		Project current addDeferredUIMessage: [ | newCommandBlock |
-			commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
-			newCommandBlock ps1: ps1.
-			newCommandBlock focus]]
+	ps1 ~= ''
+		ifTrue: [
+			Project current addDeferredUIMessage: [ | newCommandBlock |
+				commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
+				newCommandBlock ps1: ps1.
+				newCommandBlock focus]]
+		ifFalse: [
+			((output asString includesSubstring: '[sudo]') and: [output asString includesSubstring: 'password']) ifTrue: [
+				pty nextPutAll: (UIManager default requestPassword: 'enter password').
+				pty nextPut: Character return
+				"otherwise: send cmd + C ?"]]
 ]
 
 { #category : #'as yet unclassified' }
