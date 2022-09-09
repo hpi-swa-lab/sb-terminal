@@ -233,7 +233,6 @@ SBBashTerminal >> readDataFromBash [
 	(pty isConnected not or: [closed]) ifTrue: [^ nil].
 	Processor yield.
 	(buf := pty peekUpToEnd) isNil ifTrue: [buf := pty upToEnd].
-	Transcript showln: buf asString.
 	ps1 := '' asText.
 	output := '' asText.
 	self readFrom: buf asString readStream writeInto: ps1 and: output.
@@ -254,21 +253,24 @@ SBBashTerminal >> readDataFromBash [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 
-	| sequence attributes prevState |
+	| attributes prevState |
 	attributes := {TextColor black}.
 	"TODO: escape code lesen als eigene Methode und dann direkt hinter state = #output oder #ps1 aufrufen statt eigenen State dafür zu machen"
 	[input atEnd] whileFalse: [
 		state
 			caseOf: {
 				[#escape] -> [
-					sequence := input upTo: $m.
-					(sequence beginsWith: '[')
-						ifTrue: [
-							"text attributes"
-							attributes := self attributesFrom: (sequence from: 2).
+					input peek = $[
+						ifTrue: [ | sequence |
+							"control sequence introducer"
+							sequence := input next asText.
+							[input atEnd or: [sequence last isLetter]] whileFalse: [sequence append: input next].
+							sequence last = $m ifTrue: ["text attributes"
+							attributes := self attributesFrom: (sequence asString from: 2 to: sequence size - 1)].
 							state := prevState]
-						ifFalse: [
+						ifFalse: [ | sequence |
 							"side effects"
+							sequence := input upTo: $m.
 							(sequence beginsWith: ']0;') ifTrue: [sequence := sequence, (input upTo: (Character value: 7))].
 							self evaluateEscapeSequence: sequence prevState: prevState]].
 				[#output] -> [ | outBuffer |

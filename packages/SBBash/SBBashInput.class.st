@@ -68,7 +68,7 @@ SBBashInput class >> confirm: aBlock [
 	| pty terminal command |
 	terminal := aBlock containingArtefact.
 	command := (aBlock orOwnerSuchThat: [:b | b isTSBlock and: [b type = #command]])
-		ifNotNil: #sourceString
+		ifNotNil: [aBlock toplevel sourceString]
 		ifNil: [^ self].
 	pty := terminal pty.
 	terminal state: #hidden.
