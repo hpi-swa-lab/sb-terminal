@@ -3217,9 +3217,10 @@ SBBashInput class >> suggestionsFor: aBlock [
 		onlyShowFlags: onlyShowFlags;
 		onlyShowFileNames: onlyShowFileNames.
 	
-	aBlock parentSandblock type = #'command' ifTrue: [
+	"check if aBlock is a command_name (not sure why, but the actual type is word)"
+	aBlock slot nodes detect: [:node | node type = #'command_name'] ifFound: [:e | 
 		"reduce lag by only searching commands beyond a certain length"
-		info searchString size >= 3 ifTrue: [self loadCommandsFrom: info into: suggestions].
+		aBlock sourceString size >= 3 ifTrue: [self loadCommandsFrom: info into: suggestions].
 		^ self deduplicateBashSuggestions: suggestions].
 	
 	self loadCommandObjectFor: info.
