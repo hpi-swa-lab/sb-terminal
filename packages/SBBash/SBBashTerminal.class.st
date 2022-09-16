@@ -116,7 +116,7 @@ SBBashTerminal >> evaluateEscapeSequence: sequence prevState: prevState [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> examples: aString [
 
-	self sandblockEditor examplesBlock contents: self sandblockEditor examplesBlock contents asText, aString.
+	self sandblockEditor examplesBlock contents: aString.
 	examples := aString
 ]
 
