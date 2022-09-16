@@ -234,9 +234,19 @@ SBBashTerminal >> pwd [
 ]
 
 { #category : #'as yet unclassified' }
-SBBashTerminal >> pwd: aString [
+SBBashTerminal >> pwd: aText [
 
-	pwd := aString
+	| ps1Parts unexpandedPwd homeIndex |
+	ps1Parts := aText string findBetweenSubStrs: ':$'.
+	ps1Parts removeLast.
+	unexpandedPwd := ps1Parts last.
+	homeIndex := unexpandedPwd findString: '~'.
+	homeIndex = 1
+		ifTrue: [ | pathParts subst |
+			pathParts := (UnixProcess thisOSProcess environmentAt: #PWD) findBetweenSubStrs: '/'.
+			subst := '/', ((pathParts copyFrom: 1 to: 2) joinSeparatedBy: '/').
+			pwd := subst, (unexpandedPwd from: 2)]
+		ifFalse: [pwd := unexpandedPwd]
 ]
 
 { #category : #'as yet unclassified' }
@@ -254,7 +264,7 @@ SBBashTerminal >> readDataFromBash [
 		ifTrue: [
 			Project current addDeferredUIMessage: [ | newCommandBlock |
 				commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
-				pwd := ps1.
+				self pwd: ps1.
 				newCommandBlock ps1: ps1.
 				newCommandBlock focus]]
 		ifFalse: [

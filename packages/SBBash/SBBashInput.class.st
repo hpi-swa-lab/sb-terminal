@@ -2923,7 +2923,7 @@ SBBashInput class >> loadDirectoryEntryCompletionsFrom: anInfoObject into: aColl
 	| currentFolder lastSlashPosition searchString searchPath allEntries dotAndDotDot |
 	anInfoObject onlyShowFlags ifTrue: [^ {}].
 	
-	currentFolder := UnixProcess thisOSProcess environmentAt: #PWD.
+	currentFolder := anInfoObject terminal pwd.
 	lastSlashPosition := anInfoObject searchString
 		findLastOccurrenceOfString: '/'
 		startingAt: 1.
