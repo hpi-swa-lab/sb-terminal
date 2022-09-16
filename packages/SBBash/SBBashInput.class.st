@@ -3217,7 +3217,7 @@ SBBashInput class >> suggestionsFor: aBlock [
 		onlyShowFlags: onlyShowFlags;
 		onlyShowFileNames: onlyShowFileNames.
 	
-	aBlock parentSandblock type = #'command_name' ifTrue: [
+	aBlock parentSandblock type = #'command' ifTrue: [
 		"reduce lag by only searching commands beyond a certain length"
 		info searchString size >= 3 ifTrue: [self loadCommandsFrom: info into: suggestions].
 		^ self deduplicateBashSuggestions: suggestions].
