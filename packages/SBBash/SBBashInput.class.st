@@ -2920,7 +2920,7 @@ SBBashInput class >> loadCommandsFrom: anInfoObject into: aCollection [
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadDirectoryEntryCompletionsFrom: anInfoObject into: aCollection [
 
-	| currentFolder lastSlashPosition searchString searchPath allEntries |
+	| currentFolder lastSlashPosition searchString searchPath allEntries dotAndDotDot |
 	anInfoObject onlyShowFlags ifTrue: [^ {}].
 	
 	currentFolder := UnixProcess thisOSProcess environmentAt: #PWD.
@@ -2929,7 +2929,10 @@ SBBashInput class >> loadDirectoryEntryCompletionsFrom: anInfoObject into: aColl
 		startingAt: 1.
 	searchString := anInfoObject searchString from: lastSlashPosition + 1.
 	searchPath := anInfoObject searchString from: 1 to: lastSlashPosition.
-	allEntries := ((FileDirectory on: currentFolder) / searchPath) entries.
+	dotAndDotDot := {
+		DirectoryEntry fromArray: #('.' 0 0 true 0) directory: currentFolder.
+		DirectoryEntry fromArray: #('..' 0 0 true 0) directory: currentFolder}.
+	allEntries := dotAndDotDot, ((FileDirectory on: currentFolder) / searchPath) entries.
 	
 	allEntries do: [:entry |
 		(searchString = '' or: [entry name asLowercase includesSubstring: searchString asLowercase]) ifTrue: [ | name icon |
@@ -2949,9 +2952,7 @@ SBBashInput class >> loadDirectoryEntryCompletionsFrom: anInfoObject into: aColl
 							yourself}
 					in: anInfoObject sandblockEditor;
 				option: searchPath, name;
-				key: name)].
-		
-		]
+				key: name)]]
 ]
 
 { #category : #'as yet unclassified' }

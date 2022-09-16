@@ -15,7 +15,8 @@ Class {
 		'waitingForCommandString',
 		'debugOutput',
 		'allCommands',
-		'examples'
+		'examples',
+		'pwd'
 	],
 	#category : #SBBash
 }
@@ -227,6 +228,18 @@ SBBashTerminal >> pty [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashTerminal >> pwd [
+
+	^ pwd
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> pwd: aString [
+
+	pwd := aString
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTerminal >> readDataFromBash [
 
 	| buf output ps1 |
@@ -241,6 +254,7 @@ SBBashTerminal >> readDataFromBash [
 		ifTrue: [
 			Project current addDeferredUIMessage: [ | newCommandBlock |
 				commandBlocks addMorphBack: (newCommandBlock := SBBashCommandBlock new).
+				pwd := ps1.
 				newCommandBlock ps1: ps1.
 				newCommandBlock focus]]
 		ifFalse: [
