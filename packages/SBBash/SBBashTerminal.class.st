@@ -195,7 +195,7 @@ SBBashTerminal >> launchBash [
 	
 	closed := false.
 	commands := (Json readFrom: (UnixProcess thisOSProcess waitForCommandOutput: 'cat ', SBBashEditor pathToAllManpageData) readStream) collect: [:cmd | SBBashCommand newFromJson: cmd forTerminal: self].
-	pty nextPutAll: 'PS1="\e]81m${PS1}\e]80m"'.
+	pty nextPutAll: ' PS1="\e]81m${PS1}\e]80m"'.
 	pty nextPut: Character return.
 	state := #output.
 	process := [[self readDataFromBash] doWhileFalse: [closed]] fork
@@ -335,6 +335,12 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 SBBashTerminal >> refreshCommandIndex [
 
 	currentCommandIndex := commandBlocks childSandblocks size + 1
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> semantics [
+
+	^ SBBashInput
 ]
 
 { #category : #'as yet unclassified' }
