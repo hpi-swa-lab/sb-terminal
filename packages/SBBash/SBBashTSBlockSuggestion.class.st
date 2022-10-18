@@ -5,10 +5,23 @@ Class {
 		'option',
 		'terminalCommand',
 		'key',
-		'icon'
+		'icon',
+		'alternatives'
 	],
 	#category : #SBBash
 }
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> alternatives [
+
+	^ alternatives
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> alternatives: anObject [
+
+	alternatives := anObject
+]
 
 { #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> blocks: aCollection in: anEditor [
@@ -98,6 +111,15 @@ SBBashTSBlockSuggestion >> option: aString [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> preview: aForm previewOnly: aBoolean [
+
+	self addMorphBack: (SBRow new
+		addMorphBack: (preview := aForm asMorph);
+		addMorphBack: (SBMultilineOwnTextMorph new contents: ' (', (alternatives, ')'))).
+	aBoolean ifTrue: [self firstSubmorph delete]
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> selector: aString [
 
 	| container |
@@ -136,6 +158,6 @@ SBBashTSBlockSuggestion >> useSuggestionOn: aBlock in: anEditor [
 					"for suggestions for directories (key ends with '/'), we want to keep the selection in the last block; for other suggestions, we want to end up at the insert position behind the last block"
 					(key isNil or: [(key endsWith: '/') not]) ifTrue: [
 						"??? not sure"
-						anEditor performForSelection: #moveCursorRight.
-						anEditor performForSelection: #moveCursorRight]]]]
+						anEditor performForSelection: #moveCursorRight
+						"anEditor performForSelection: #moveCursorRight"]]]]
 ]

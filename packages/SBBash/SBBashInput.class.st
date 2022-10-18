@@ -2855,6 +2855,12 @@ SBBashInput class >> grammarJson [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> isOneStatementPerArtefactFor: aBlock [
+
+	^ true
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> loadCommandFromManpage: manpage for: anInfoObject [
 
 	| json |
@@ -3067,9 +3073,11 @@ SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 
+	| onlyFlags |
 	anInfoObject onlyShowFileNames ifTrue: [^ {}].
+	onlyFlags := anInfoObject onlyShowFlags.
 	anInfoObject commandObject ifNil: [^ {}].
-	anInfoObject commandObject options do: [:option | | morphs flagInfo |
+	anInfoObject commandObject options do: [:option | | morphs flagInfo validSuggestion |
 		flagInfo := SBBashFlagInformation new
 			description: (option at: #description);
 			flags: (option at: #flags);
@@ -3090,9 +3098,16 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 					(SBBashInput blockFor: #word) in: [:b |
 						b lastDeepChild lastSubmorph placeholderText: flagInfo arguments first.
 						b]}].
-		((flagInfo flagsJoined asLowercase includesSubstring: anInfoObject searchString asLowercase) or: (flagInfo description asLowercase includesSubstring: anInfoObject searchString asLowercase)) ifTrue: [
+		
+		onlyFlags
+			ifTrue: [validSuggestion := flagInfo flagsJoined asLowercase includesSubstring: anInfoObject searchString asLowercase]
+			ifFalse: [validSuggestion := (flagInfo flagsJoined asLowercase includesSubstring: anInfoObject searchString asLowercase) or: (flagInfo description asLowercase includesSubstring: anInfoObject searchString asLowercase)].
+		validSuggestion ifTrue: [
+			flagInfo flagsJoined asLowercase.
+			
 			collection add: (SBBashTSBlockSuggestion new
 				selector: flagInfo description;
+				alternatives: flagInfo flagsJoined;
 				blocks: morphs in: anInfoObject sandblockEditor;
 				option: flagInfo firstFlag;
 				terminalCommand: anInfoObject mainCommand).
