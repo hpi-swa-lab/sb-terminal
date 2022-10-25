@@ -67,9 +67,9 @@ SBBashInput class >> confirm: aBlock [
 
 	| pty terminal command |
 	terminal := aBlock containingArtefact.
-	command := (aBlock orOwnerSuchThat: [:b | b isTSBlock and: [b type = #command]])
-		ifNotNil: [aBlock toplevel sourceString]
-		ifNil: [^ self].
+	command := ((aBlock orOwnerSuchThat: [:b | b isTSBlock and: [b type = #command]])
+		ifNil: [aBlock childSandblocks first type = #command ifTrue: [aBlock childSandblocks first] ifFalse: [^ self]])
+			ifNotNil: [aBlock toplevel sourceString].
 	pty := terminal pty.
 	terminal state: #hidden.
 	terminal newestCommandBlock commandString: command.
@@ -2855,6 +2855,12 @@ SBBashInput class >> grammarJson [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> inputTransitionBlackList [
+
+	^ {'for_statement'}
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> isOneStatementPerArtefactFor: aBlock [
 
 	^ true
@@ -3183,7 +3189,7 @@ SBBashInput class >> showInsertHints [
 { #category : #'as yet unclassified' }
 SBBashInput class >> string: aString startsWithAnyOf: aCollection [
 
-	aCollection do: [:string | ((aString startsWith: string, ' ') or: [aString = string]) ifTrue: [^ true]].
+	aCollection do: [:string | ((aString beginsWith: string, ' ') or: [aString = string]) ifTrue: [^ true]].
 	^ false
 ]
 
@@ -3211,11 +3217,11 @@ SBBashInput class >> suggestionsFor: aBlock [
 	suggestions := OrderedCollection new.
 	(aBlock type ~= #word and: [aBlock type ~= #flag]) ifTrue: [^ suggestions].
 	
-	(aBlock sourceString startsWith: '-')
+	(aBlock sourceString beginsWith: '-')
 		ifTrue: [
 			onlyShowFlags := true.
 			onlyShowFileNames := false.
-			(aBlock sourceString startsWith: '--')
+			(aBlock sourceString beginsWith: '--')
 				ifTrue: [searchString := aBlock sourceString from: (3 min: aBlock sourceString size)]
 				ifFalse: [searchString := aBlock sourceString from: (2 min: aBlock sourceString size)]]
 		ifFalse: [
@@ -3233,7 +3239,7 @@ SBBashInput class >> suggestionsFor: aBlock [
 		onlyShowFileNames: onlyShowFileNames.
 	
 	"check if aBlock is a command_name (not sure why, but the actual type is word)"
-	aBlock slot nodes detect: [:node | node type = #'command_name'] ifFound: [:e | 
+	aBlock slot nodes detect: [:node | node type = #'command_name'] ifFound: [:e |
 		"reduce lag by only searching commands beyond a certain length"
 		aBlock sourceString size >= 3 ifTrue: [self loadCommandsFrom: info into: suggestions].
 		^ self deduplicateBashSuggestions: suggestions].

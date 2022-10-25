@@ -52,7 +52,7 @@ SBBashCommandBlock >> initialize [
 				vResizing: #shrinkWrap;
 				focusable: false);
 			addMorphBack: (input := SBBlock new
-				addMorphBack: ((SBBashInput parseToplevel: '')
+				addMorphBack: ((SBBashInput parse: '')
 					hResizing: #spaceFill;
 					vResizing: #spaceFill;
 					layoutInset: 0;

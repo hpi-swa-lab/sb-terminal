@@ -102,8 +102,8 @@ SBBashTerminal >> description: aString [
 SBBashTerminal >> evaluateEscapeSequence: sequence prevState: prevState [
 	"set title"
 
-	(sequence upTo: $;) = ']0' ifTrue: [ | title |
-		title := 'm', sequence upTo: (Character value: 7).
+	(sequence copyUpTo: $;) = ']0' ifTrue: [ | title |
+		title := 'm', sequence copyUpTo: (Character value: 7).
 		state := prevState].
 	"set ps1"
 	sequence = ']81' ifTrue: [state := #ps1].
