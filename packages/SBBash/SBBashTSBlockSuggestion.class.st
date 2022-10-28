@@ -115,7 +115,7 @@ SBBashTSBlockSuggestion >> preview: aForm previewOnly: aBoolean [
 
 	self addMorphBack: (SBRow new
 		addMorphBack: (preview := aForm asMorph);
-		addMorphBack: (SBMultilineOwnTextMorph new contents: ' (', (alternatives, ')'))).
+		addMorphBack: (SBMultilineOwnTextMorph new contents: ' (', ((alternatives ifNil: ['']), ')'))).
 	aBoolean ifTrue: [self firstSubmorph delete]
 ]
 

@@ -2857,7 +2857,7 @@ SBBashInput class >> grammarJson [
 { #category : #'as yet unclassified' }
 SBBashInput class >> inputTransitionBlackList [
 
-	^ {'for_statement'}
+	^ {'for_statement'. #'c_style_for_statement'}
 ]
 
 { #category : #'as yet unclassified' }
@@ -3213,7 +3213,7 @@ SBBashInput class >> suggestionsFor2: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> suggestionsFor: aBlock [
 
-	| suggestions info terminal searchString onlyShowFlags onlyShowFileNames |
+	| suggestions info terminal searchString onlyShowFlags onlyShowFileNames fullCommandBlock |
 	suggestions := OrderedCollection new.
 	(aBlock type ~= #word and: [aBlock type ~= #flag]) ifTrue: [^ suggestions].
 	
@@ -3230,8 +3230,10 @@ SBBashInput class >> suggestionsFor: aBlock [
 			onlyShowFileNames := searchString includesSubstring: '/'].
 	"Könnte in eine Methode SBBashCommandInformation >> newFromBlock: aBlock"
 	terminal := aBlock containingArtefact.
+	fullCommandBlock := aBlock.
+	[fullCommandBlock type = #command] whileFalse: [fullCommandBlock := fullCommandBlock parentSandblock].
 	info := SBBashCommandInformation new
-		fullCommand: aBlock parentSandblock sourceString;
+		fullCommand: fullCommandBlock sourceString;
 		searchString: searchString;
 		terminal: terminal;
 		sandblockEditor: aBlock sandblockEditor;
@@ -3258,7 +3260,7 @@ SBBashInput class >> suggestionsFor: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> suggestionsForInsert: aCommand [
 
-	| suggestions terminal info container editor |
+	| suggestions terminal info container editor fullCommandBlock |
 	suggestions := OrderedCollection new.
 	((aCommand element isTSChoice and: [aCommand element alternatives noneSatisfy: [:alt | alt type = #'_primary_expression']]) and: [aCommand element type ~= #'flag_argument']) ifTrue: [^ suggestions].
 	container := aCommand container.
@@ -3267,6 +3269,8 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 	
 	aCommand element type = #'flag_argument' ifTrue: [container := container parentSandblock].
 	
+	fullCommandBlock := container.
+	[(fullCommandBlock type = #command) or: [fullCommandBlock type = #program]] whileFalse: [fullCommandBlock := fullCommandBlock parentSandblock].
 	info := SBBashCommandInformation new
 		fullCommand: container sourceString;
 		terminal: terminal;

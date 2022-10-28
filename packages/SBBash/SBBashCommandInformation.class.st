@@ -41,10 +41,10 @@ SBBashCommandInformation >> fullCommand: aString [
 { #category : #'as yet unclassified' }
 SBBashCommandInformation >> mainCommand [
 
-	searchString ifNil: [^ self trimFlagsFrom: fullCommand] ifNotNil: [
+	searchString ifNil: [^ self trimFlagsAndDoFrom: fullCommand] ifNotNil: [
 		searchString = fullCommand
 			ifTrue: [^ '']
-			ifFalse: [^ self trimFlagsFrom: (fullCommand from: 1 to: fullCommand size - searchString size - 1)]]
+			ifFalse: [^ self trimFlagsAndDoFrom: (fullCommand from: 1 to: fullCommand size - searchString size - 1)]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -120,9 +120,12 @@ SBBashCommandInformation >> terminal: anObject [
 ]
 
 { #category : #'as yet unclassified' }
-SBBashCommandInformation >> trimFlagsFrom: aString [
+SBBashCommandInformation >> trimFlagsAndDoFrom: aString [
 
-	| upTo |
-	upTo := aString findString: '-'.
-	upTo > 0 ifTrue: [^ aString from: 1 to: upTo - 2] ifFalse: [^ aString withBlanksTrimmed]
+	| withoutDo upTo |
+	withoutDo := (aString startsWith: 'do ')
+		ifTrue: [aString from: 4]
+		ifFalse: [aString].
+	upTo := withoutDo findString: '-'.
+	upTo > 1 ifTrue: [^ withoutDo from: 1 to: upTo - 2] ifFalse: [^ withoutDo withBlanksTrimmed]
 ]
