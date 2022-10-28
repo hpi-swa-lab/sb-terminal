@@ -20,6 +20,7 @@ SBBashTSBlockSuggestion >> alternatives [
 { #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> alternatives: anObject [
 
+
 	alternatives := anObject
 ]
 
@@ -113,9 +114,9 @@ SBBashTSBlockSuggestion >> option: aString [
 { #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> preview: aForm previewOnly: aBoolean [
 
-	self addMorphBack: (SBRow new
-		addMorphBack: (preview := aForm asMorph);
-		addMorphBack: (SBMultilineOwnTextMorph new contents: ' (', ((alternatives ifNil: ['']), ')'))).
+	| container |
+	self addMorphBack: ((container := SBRow new) addMorphBack: (preview := aForm asMorph)).
+	alternatives ifNotNil: [container addMorphBack: (SBMultilineOwnTextMorph new contents: ' (', (alternatives, ')'))].
 	aBoolean ifTrue: [self firstSubmorph delete]
 ]
 
