@@ -52,13 +52,14 @@ SBBashCommandBlock >> initialize [
 				vResizing: #shrinkWrap;
 				focusable: false);
 			addMorphBack: (input := SBBlock new
+				layoutPolicy: TableLayout new;
 				addMorphBack: ((SBBashInput parse: '')
 					hResizing: #spaceFill;
 					vResizing: #spaceFill;
 					layoutInset: 0;
 					minHeight: TextStyle defaultFont height);
-				vResizing: #shrinkWrap;
-				hResizing: #shrinkWrap);
+				vResizing: #spaceFill;
+				hResizing: #spaceFill);
 			hResizing: #spaceFill;
 			cellGap: 2);
 		addMorphBack: (output := SBBashFormattedTextBubble multiLine
@@ -83,10 +84,11 @@ SBBashCommandBlock >> input [
 SBBashCommandBlock >> input: aString [
 
 	input submorphsDo: [:m | m delete].
-	input addMorphBack: ((SBBashInput parseToplevel: aString)
+	input addMorphBack: ((SBBashInput parse: aString)
 		hResizing: #spaceFill;
 		vResizing: #spaceFill;
 		layoutInset: 0;
+		width: 200000;
 		minHeight: TextStyle defaultFont height).
 	self moveCursorToEnd
 ]

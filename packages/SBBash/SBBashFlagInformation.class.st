@@ -6,7 +6,8 @@ Class {
 		'flags',
 		'arguments',
 		'optionals',
-		'morphs'
+		'morphs',
+		'searchCriterium'
 	],
 	#category : #SBBash
 }
@@ -81,6 +82,18 @@ SBBashFlagInformation >> optionals [
 SBBashFlagInformation >> optionals: anObject [
 
 	optionals := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SBBashFlagInformation >> searchCriterium [
+
+	^ searchCriterium
+]
+
+{ #category : #'as yet unclassified' }
+SBBashFlagInformation >> searchCriterium: aString [
+
+	searchCriterium := aString
 ]
 
 { #category : #'as yet unclassified' }

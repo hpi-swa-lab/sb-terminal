@@ -84,20 +84,20 @@ SBBashInput class >> confirm: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> deduplicateBashSuggestions: aCollection [
 
-	| dict deduplicationDict sizesDict suggestionDict uniqSuggs uniqGroups |
+	| dict sizesDict suggestionDict deduplicationColl return |
 	dict := aCollection groupBy: [:suggestion | suggestion key].
 	sizesDict := dict collect: [:c | c value size].
 	suggestionDict := dict collect: [:c | c value first].
-	SBToggledCode
-		comment: ''
-		active: 0
-		do: {[orderedDict := dict withKeysSorted: [:k1 :k2 | (sizesDict at: k1) >= (sizesDict at: k2)]]}.
+	"orderedDict := dict withKeysSorted: [:k1 :k2 | (sizesDict at: k1) >= (sizesDict at: k2)]]}.
 	uniqSuggs := OrderedCollection new.
 	SBToggledCode comment: '' active: 0 do: {
-		[orderedDict keysDo: [:c | deduplicatedSuggestions add: ((suggestionDict at: c) option: (sizesDict at: c) printString)]]}.
-	
-	deduplicationDict := OrderedDictionary new.
-	aCollection reverseDo: [:suggestion | deduplicationDict at: suggestion key put: suggestion].
+		[orderedDict keysDo: [:c | deduplicatedSuggestions add: ((suggestionDict at: c) option: (sizesDict at: c) printString)]"
+		
+	deduplicationColl := OrderedCollection new.
+	return := aCollection select: [:suggestion | (deduplicationColl indexOf: suggestion key ifAbsent: [deduplicationColl add: suggestion key. -1]) < 0].
+	^ return
+
+	"aCollection reverseDo: [:suggestion | deduplicationDict at: suggestion key put: suggestion].
 	uniqSuggs := deduplicationDict keys reverse.
 	uniqGroups := OrderedCollection new.
 	uniqSuggs do: [:c | | uniqueSuggestion moreOptions |
@@ -105,7 +105,25 @@ SBBashInput class >> deduplicateBashSuggestions: aCollection [
 		moreOptions := (sizesDict at: c) - 1.
 		moreOptions > 0 ifTrue: [uniqueSuggestion selector: moreOptions printString, ' more option(s)'].
 		uniqGroups add: uniqueSuggestion].
-	^ uniqGroups
+	^ uniqGroups"
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> filterAndOrderSuggestions: allEntries Given: searchString [
+
+	| exactMatchC exactMatchI otherEntries prefixMatchesC prefixMatchesI |
+	"first show the exact match case sensitive"
+	exactMatchC := allEntries select: [:entry | entry name = searchString].
+	"second show prefix matches case sensitive"
+	prefixMatchesC := allEntries select: [:entry | entry name startsWith: searchString].
+	"third show exact match case insensitive"
+	exactMatchI := allEntries select: [:entry | entry name asLowercase = searchString asLowercase].
+	"fourth show prefix matches case insensitive"
+	prefixMatchesI := allEntries select: [:entry | entry name asLowercase startsWith: searchString asLowercase].
+	"then the rest"
+	otherEntries := allEntries select: [:entry | searchString = '' or: [entry name asLowercase includesSubstring: searchString asLowercase]].
+	
+	^ exactMatchC, prefixMatchesC, (exactMatchI, (prefixMatchesI, otherEntries))
 ]
 
 { #category : #'as yet unclassified' }
@@ -2932,7 +2950,7 @@ SBBashInput class >> loadCommandsFrom: anInfoObject into: aCollection [
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadDirectoryEntryCompletionsFrom: anInfoObject into: aCollection [
 
-	| currentFolder lastSlashPosition searchString searchPath allEntries dotAndDotDot |
+	| currentFolder lastSlashPosition searchString searchPath allEntries dotAndDotDot filteredEntries |
 	anInfoObject onlyShowFlags ifTrue: [^ {}].
 	
 	currentFolder := anInfoObject terminal pwd.
@@ -2942,29 +2960,30 @@ SBBashInput class >> loadDirectoryEntryCompletionsFrom: anInfoObject into: aColl
 	searchString := anInfoObject searchString from: lastSlashPosition + 1.
 	searchPath := anInfoObject searchString from: 1 to: lastSlashPosition.
 	dotAndDotDot := {
-		DirectoryEntry fromArray: #('.' 0 0 true 0) directory: currentFolder.
+		"DirectoryEntry fromArray: #('.' 0 0 true 0) directory: currentFolder."
 		DirectoryEntry fromArray: #('..' 0 0 true 0) directory: currentFolder}.
 	allEntries := dotAndDotDot, ((FileDirectory on: currentFolder) / searchPath) entries.
 	
-	allEntries do: [:entry |
-		(searchString = '' or: [entry name asLowercase includesSubstring: searchString asLowercase]) ifTrue: [ | name icon |
-			entry isDirectory
-				ifTrue: [
-					icon := SBIcon iconFolder color: (Color r: 0.25 g: 0.25 b: 0.25).
-					name := entry name, '/']
-				ifFalse: [
-					icon := SBIcon iconFile color: (Color r: 0.75 g: 0.75 b: 0.75).
-					name := entry name].
-			aCollection add: (SBBashTSBlockSuggestion new
-				icon: icon;
-				selector: name;
-				blocks: {
-						(self blockFor: #word)
-							contents: searchPath, name;
-							yourself}
-					in: anInfoObject sandblockEditor;
-				option: searchPath, name;
-				key: name)]]
+	filteredEntries := self filterAndOrderSuggestions: allEntries Given: searchString.
+		
+	filteredEntries do: [:entry | | icon name |
+		entry isDirectory
+			ifTrue: [
+				icon := SBIcon iconFolder color: (Color r: 0.25 g: 0.25 b: 0.25).
+				name := entry name, '/']
+			ifFalse: [
+				icon := SBIcon iconFile color: (Color r: 0.75 g: 0.75 b: 0.75).
+				name := entry name].
+		aCollection add: (SBBashTSBlockSuggestion new
+			icon: icon;
+			selector: name;
+			blocks: {
+					(self blockFor: #word)
+						contents: searchPath, name;
+						yourself}
+				in: anInfoObject sandblockEditor;
+			option: searchPath, name;
+			key: name)]
 ]
 
 { #category : #'as yet unclassified' }
@@ -3079,58 +3098,67 @@ SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 
-	| onlyFlags |
+	| onlyFlags flagInformations validOptions searchString exactMatchC prefixMatchesC exactMatchI prefixMatchesI otherEntries |
 	anInfoObject onlyShowFileNames ifTrue: [^ {}].
 	onlyFlags := anInfoObject onlyShowFlags.
 	anInfoObject commandObject ifNil: [^ {}].
-	anInfoObject commandObject options do: [:option | | morphs flagInfo validSuggestion |
-		flagInfo := SBBashFlagInformation new
+	
+	flagInformations := anInfoObject commandObject options collect: [:option | | searchCriteria info |
+		info := SBBashFlagInformation new
 			description: (option at: #description);
 			flags: (option at: #flags);
 			arguments: (option at: #arguments);
 			optionals: (option at: #optionals).
-		
-		flagInfo arguments
+		onlyFlags
+			ifTrue: [searchCriteria := info flags collect: [:f | f from: 2]]
+			ifFalse: [searchCriteria := (info flags collect: [:f | f from: 2]), {info description}].
+		info searchCriterium: searchCriteria.
+		info].
+	
+	searchString := anInfoObject searchString.
+	exactMatchC := flagInformations select: [:entry | entry searchCriterium anySatisfy: [:c | c = searchString]].
+	prefixMatchesC := flagInformations select: [:entry | entry searchCriterium anySatisfy: [:c | c startsWith: searchString]].
+	exactMatchI := flagInformations select: [:entry | entry searchCriterium anySatisfy: [:c | c asLowercase = searchString asLowercase]].
+	prefixMatchesI := flagInformations select: [:entry | entry searchCriterium anySatisfy: [:c | c asLowercase startsWith: searchString asLowercase]].
+	otherEntries := flagInformations select: [:entry | searchString = '' or: [entry searchCriterium anySatisfy: [:c | c asLowercase includesSubstring: searchString asLowercase]]].
+	validOptions := exactMatchC, prefixMatchesC, (exactMatchI, (prefixMatchesI, otherEntries)).
+	
+	validOptions do: [:info | | morphs |
+		info arguments
 			ifEmpty: [
 				morphs := {
 					(SBBashInput blockFor: #flag)
-						contents: flagInfo firstFlag;
+						contents: info firstFlag;
 						yourself}]
 			ifNotEmpty: [
 				morphs := {
 					(SBBashInput blockFor: #flag)
-						contents: flagInfo firstFlag;
+						contents: info firstFlag;
 						yourself.
 					(SBBashInput blockFor: #word) in: [:b |
-						b lastDeepChild lastSubmorph placeholderText: flagInfo arguments first.
+						b lastDeepChild lastSubmorph placeholderText: info arguments first.
 						b]}].
 		
-		onlyFlags
-			ifTrue: [validSuggestion := flagInfo flagsJoined asLowercase includesSubstring: anInfoObject searchString asLowercase]
-			ifFalse: [validSuggestion := (flagInfo flagsJoined asLowercase includesSubstring: anInfoObject searchString asLowercase) or: (flagInfo description asLowercase includesSubstring: anInfoObject searchString asLowercase)].
-		validSuggestion ifTrue: [
-			flagInfo flagsJoined asLowercase.
-			
+		collection add: (SBBashTSBlockSuggestion new
+			selector: info description;
+			alternatives: info flagsJoined;
+			blocks: morphs in: anInfoObject sandblockEditor;
+			option: info firstFlag;
+			terminalCommand: anInfoObject mainCommand).
+		"with optionals"
+		info optionals notEmpty ifTrue: [
+			morphs := info optionals collect: [:opt |
+				(SBBashInput blockFor: #flag)
+					contents: info firstFlag;
+					addBlock: ((SBBashInput blockFor: #'flag_argument') in: [:b |
+						b lastDeepChild lastSubmorph placeholderText: opt.
+						b]);
+					yourself].
 			collection add: (SBBashTSBlockSuggestion new
-				selector: flagInfo description;
-				alternatives: flagInfo flagsJoined;
 				blocks: morphs in: anInfoObject sandblockEditor;
-				option: flagInfo firstFlag;
-				terminalCommand: anInfoObject mainCommand).
-			"with optionals"
-			flagInfo optionals notEmpty ifTrue: [
-				morphs := flagInfo optionals collect: [:opt |
-					(SBBashInput blockFor: #flag)
-						contents: flagInfo firstFlag;
-						addBlock: ((SBBashInput blockFor: #'flag_argument') in: [:b |
-							b lastDeepChild lastSubmorph placeholderText: opt.
-							b]);
-						yourself].
-				collection add: (SBBashTSBlockSuggestion new
-					blocks: morphs in: anInfoObject sandblockEditor;
-					option: flagInfo firstFlag;
-					terminalCommand: anInfoObject mainCommand;
-					key: flagInfo firstFlag, 'optional')]]]
+				option: info firstFlag;
+				terminalCommand: anInfoObject mainCommand;
+				key: info firstFlag, 'optional')]]
 ]
 
 { #category : #'as yet unclassified' }
@@ -3187,6 +3215,12 @@ SBBashInput class >> showInsertHints [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> softLineBreakBetween: a and: b [
+
+	^ false
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> string: aString startsWithAnyOf: aCollection [
 
 	aCollection do: [:string | ((aString beginsWith: string, ' ') or: [aString = string]) ifTrue: [^ true]].
@@ -3217,7 +3251,7 @@ SBBashInput class >> suggestionsFor: aBlock [
 	suggestions := OrderedCollection new.
 	(aBlock type ~= #word and: [aBlock type ~= #flag]) ifTrue: [^ suggestions].
 	
-	(aBlock sourceString beginsWith: '-')
+	((aBlock sourceString beginsWith: '-') or: (aBlock sourceString beginsWith: '+'))
 		ifTrue: [
 			onlyShowFlags := true.
 			onlyShowFileNames := false.
@@ -3231,7 +3265,9 @@ SBBashInput class >> suggestionsFor: aBlock [
 	"Könnte in eine Methode SBBashCommandInformation >> newFromBlock: aBlock"
 	terminal := aBlock containingArtefact.
 	fullCommandBlock := aBlock.
-	[fullCommandBlock type = #command] whileFalse: [fullCommandBlock := fullCommandBlock parentSandblock].
+	[fullCommandBlock type = #command] whileFalse: [
+		fullCommandBlock := fullCommandBlock parentSandblock.
+		fullCommandBlock isTSBlock ifFalse: [^ #()]].
 	info := SBBashCommandInformation new
 		fullCommand: fullCommandBlock sourceString;
 		searchString: searchString;
