@@ -77,7 +77,7 @@ SBBashCommandBlock >> initialize [
 { #category : #'as yet unclassified' }
 SBBashCommandBlock >> input [
 
-	^ input submorphs first sourceString
+	^ (input submorphs isEmpty) ifTrue: [^ ''] ifFalse: [^ input submorphs first sourceString]
 ]
 
 { #category : #'as yet unclassified' }

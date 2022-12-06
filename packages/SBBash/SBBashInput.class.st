@@ -3323,37 +3323,40 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 	
 	previousBlock := nil.
 	"flag"
+	
 	aCommand element type = #'flag_argument' ifTrue: [ | insertIndex |
 		insertIndex := container parentSandblock submorphs indexOf: container.
 		"container actually should be the full command, not just the flag"
 		container := container parentSandblock.
-		(insertIndex > 1) ifTrue: [previousBlock := container submorphs at: insertIndex - 1]].
+		insertIndex > 1 ifTrue: [previousBlock := container submorphs at: insertIndex - 1]].
 	"not flag --> ifFalse?"
-	(aCommand element isTSChoice and: [aCommand element alternatives anySatisfy: [:alt | alt type = #'_primary_expression']]) ifTrue: [
-		| insertIndex |
+	(aCommand element isTSChoice and: [aCommand element alternatives anySatisfy: [:alt | alt type = #'_primary_expression']]) ifTrue: [ | insertIndex |
 		insertIndex := aCommand index.
-		(insertIndex > 1) ifTrue: [previousBlock := container submorphs at: insertIndex - 1]].
-		(aCommand element type = #'flag_argument') ifTrue: [
-		]. 
+		insertIndex > 1 ifTrue: [previousBlock := container submorphs at: insertIndex - 1]].
+	aCommand element type = #'flag_argument' ifTrue: [].
 	
 	fullCommandBlock := container.
-	[(fullCommandBlock type = #command) or: [fullCommandBlock type = #program]] whileFalse: [fullCommandBlock := fullCommandBlock parentSandblock].
+	[fullCommandBlock type = #command or: [fullCommandBlock type = #program]] whileFalse: [fullCommandBlock := fullCommandBlock parentSandblock].
 	info := SBBashCommandInformation new
 		fullCommand: container sourceString;
 		terminal: terminal;
 		sandblockEditor: editor.
-
+	
 	self loadCommandObjectFor: info.
 	self loadInsertFileNameCompletionsFrom: info into: suggestions.
 	(info fullCommand ~= '' and: [previousBlock notNil]) ifTrue: [
 		"only if previous Block is a command_name, load subcommands"
-		previousBlock slot nodes detect: [:node | node type = #'command_name'] ifFound: [ :e |
-			self loadInsertSubcommandsFrom: info into: suggestions]].
+		previousBlock slot nodes
+			detect: [:node | node type = #'command_name']
+			ifFound: [:e | self loadInsertSubcommandsFrom: info into: suggestions]].
 	self loadInsertSuggestionsFrom: info into: suggestions.
-	info commandObject ifNotNil: [
+	info commandObject ifNotNil: [ | exampleCommand |
 		terminal synopsis: info commandObject synopsis.
 		terminal description: info commandObject description.
-		terminal examples: (self formatRawBash: (UnixProcess thisOSProcess waitForCommandOutput: 'tldr ', info mainCommand) readStream)].
+		"gm is special"
+		exampleCommand := info mainCommand.
+		exampleCommand = 'gm' ifTrue: [container submorphs size > 1 ifTrue: [exampleCommand := (container submorphs at: 2) sourceString]].
+		terminal examples: (self formatRawBash: (UnixProcess thisOSProcess waitForCommandOutput: 'tldr ', exampleCommand) readStream)].
 	
 	editor suggestionMenu focusHint contents: 'strg + j: focus  |  type keywords to filter  |  esc: hide suggestions'.
 	^ self deduplicateBashSuggestions: suggestions

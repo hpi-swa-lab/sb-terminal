@@ -71,10 +71,11 @@ SBBashEditor >> examplesBlock [
 { #category : #'as yet unclassified' }
 SBBashEditor >> initialize [
 
-	| sidebarScroll |
+	| sidebarScroll sidebarWidth |
 	super initialize.
 	
-	self width: 80 * 8 + (250 + 50).
+	sidebarWidth := 370.
+	self width: 80 * 8 + (sidebarWidth + 50).
 	self openMorph: (terminal := SBBashTerminal new
 		hResizing: #spaceFill;
 		vResizing: #spaceFill).
@@ -87,30 +88,29 @@ SBBashEditor >> initialize [
 		addMorphBack: (synopsisBlock := SBBashFormattedTextBubble multiLine
 			placeholderText: 'No synopsis found';
 			focusable: false;
-			maxWidth: 250;
-			minWidth: 250);
+			maxWidth: sidebarWidth;
+			minWidth: sidebarWidth);
 		addMorphBack: (examplesCaption := SBTextBubble new contents: 'Examples:');
 		addMorphBack: (examplesBlock := SBBashFormattedTextBubble multiLine
 			placeholderText: 'No examples found';
 			focusable: false;
-			maxWidth: 250;
-			minWidth: 250);
+			maxWidth: sidebarWidth;
+			minWidth: sidebarWidth);
 		addMorphBack: (descriptionCaption := SBTextBubble new contents: 'Description:');
 		addMorphBack: (descriptionBlock := SBBashFormattedTextBubble multiLine
 			placeholderText: 'No description found';
 			focusable: false;
-			maxWidth: 250;
-			minWidth: 250);
+			maxWidth: sidebarWidth;
+			minWidth: sidebarWidth);
 		layoutInset: 4;
 		cellGap: 4).
 	
 	debugBlock := SBBashFormattedTextBubble multiLine
 		placeholderText: 'Nothing';
 		focusable: false;
-		maxWidth: 250.
+		maxWidth: sidebarWidth.
 	
 	inputMapping useSuggestionViaCr: false
-	"maxWidth: 250""maxWidth: 250"
 ]
 
 { #category : #'as yet unclassified' }
