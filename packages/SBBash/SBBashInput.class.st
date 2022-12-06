@@ -2902,24 +2902,35 @@ SBBashInput class >> loadCommandFromManpage: manpage for: anInfoObject [
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadCommandObjectFor: anInfoObject [
 
-	| command fallbackSubcommands |
+	| command fallbackSubcommands fallbackCommands |
 	fallbackSubcommands := OrderedCollection new.
+	fallbackCommands := OrderedCollection new.
 	"this could also be a function in the info object"
 	command := anInfoObject terminal commands
-		detect: [:c |
+		detect: [:c | | commandParts |
 			(c commandString includesSubstring: anInfoObject mainCommand, ' ') ifTrue: [fallbackSubcommands add: c].
+			commandParts := anInfoObject mainCommand findTokens: ' '.
+			commandParts size to: 1 by: -1 do: [:n | | maybeCommand |
+				maybeCommand := (commandParts viewFrom: 1 to: n) joinSeparatedBy: ' '.
+				maybeCommand = c commandString ifTrue: [fallbackCommands add: c]].
 			c commandString = anInfoObject mainCommand]
-		ifNone: [ | subcommands |
-			SBToggledCode comment: '' active: 0 do: {[subcommands := anInfoObject terminal commands]}.
-			subcommands := fallbackSubcommands.
-			SBBashCommand new
-				commandString: '';
-				subcommands: subcommands;
-				subcommandStrings: {};
-				options: {};
-				description: nil;
-				synopsis: nil;
-				terminal: anInfoObject terminal].
+		ifNone: [
+			fallbackCommands isEmpty
+				ifFalse: [ | longestCommand |
+					longestCommand := fallbackCommands first.
+					fallbackCommands do: [:c | longestCommand commandString size < c commandString size ifTrue: [longestCommand := c]].
+					anInfoObject mainCommand: longestCommand commandString.
+					longestCommand]
+				ifTrue: [ | subcommands |
+					subcommands := fallbackSubcommands.
+					SBBashCommand new
+						commandString: '';
+						subcommands: subcommands;
+						subcommandStrings: {};
+						options: {};
+						description: nil;
+						synopsis: nil;
+						terminal: anInfoObject terminal]].
 	anInfoObject commandObject: command
 ]
 

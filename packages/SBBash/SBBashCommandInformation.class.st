@@ -4,6 +4,7 @@ Class {
 	#instVars : [
 		'terminal',
 		'fullCommand',
+		'mainCommand',
 		'searchString',
 		'previousBlock',
 		'commandObject',
@@ -41,10 +42,17 @@ SBBashCommandInformation >> fullCommand: aString [
 { #category : #'as yet unclassified' }
 SBBashCommandInformation >> mainCommand [
 
+	mainCommand ifNotNil: [^ mainCommand].
 	searchString ifNil: [^ self trimFlagsAndDoFrom: fullCommand] ifNotNil: [
 		searchString = fullCommand
 			ifTrue: [^ '']
 			ifFalse: [^ self trimFlagsAndDoFrom: (fullCommand from: 1 to: fullCommand size - searchString size - 1)]]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandInformation >> mainCommand: aString [
+
+	mainCommand := aString
 ]
 
 { #category : #'as yet unclassified' }
