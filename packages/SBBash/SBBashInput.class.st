@@ -3247,7 +3247,7 @@ SBBashInput class >> suggestionsFor2: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> suggestionsFor: aBlock [
 
-	| suggestions info terminal searchString onlyShowFlags onlyShowFileNames fullCommandBlock |
+	| suggestions info terminal searchString onlyShowFlags onlyShowFileNames fullCommandBlock blockIndex previousBlock |
 	suggestions := OrderedCollection new.
 	(aBlock type ~= #word and: [aBlock type ~= #flag]) ifTrue: [^ suggestions].
 	
@@ -3268,6 +3268,9 @@ SBBashInput class >> suggestionsFor: aBlock [
 	[fullCommandBlock type = #command] whileFalse: [
 		fullCommandBlock := fullCommandBlock parentSandblock.
 		fullCommandBlock isTSBlock ifFalse: [^ #()]].
+	blockIndex := fullCommandBlock submorphs indexOf: aBlock.
+	previousBlock := nil.
+	(blockIndex > 1) ifTrue: [previousBlock := fullCommandBlock submorphs at: blockIndex - 1].
 	info := SBBashCommandInformation new
 		fullCommand: fullCommandBlock sourceString;
 		searchString: searchString;
@@ -3284,7 +3287,10 @@ SBBashInput class >> suggestionsFor: aBlock [
 	
 	self loadCommandObjectFor: info.
 	self loadDirectoryEntryCompletionsFrom: info into: suggestions.
-	self loadSubcommandsFrom: info into: suggestions.
+	"only if previous Block is a command_name, load subcommands"
+	previousBlock ifNotNil: [
+		previousBlock slot nodes detect: [:node | node type = #'command_name'] ifFound: [:e | 
+			self loadSubcommandsFrom: info into: suggestions.]].
 	self loadSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
 		terminal synopsis: info commandObject synopsis.
@@ -3296,14 +3302,28 @@ SBBashInput class >> suggestionsFor: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> suggestionsForInsert: aCommand [
 
-	| suggestions terminal info container editor fullCommandBlock |
+	| suggestions terminal info container editor fullCommandBlock previousBlock |
 	suggestions := OrderedCollection new.
 	((aCommand element isTSChoice and: [aCommand element alternatives noneSatisfy: [:alt | alt type = #'_primary_expression']]) and: [aCommand element type ~= #'flag_argument']) ifTrue: [^ suggestions].
+	
 	container := aCommand container.
 	terminal := container containingArtefact.
 	editor := container sandblockEditor.
 	
-	aCommand element type = #'flag_argument' ifTrue: [container := container parentSandblock].
+	previousBlock := nil.
+	"flag"
+	aCommand element type = #'flag_argument' ifTrue: [ | insertIndex |
+		insertIndex := container parentSandblock submorphs indexOf: container.
+		"container actually should be the full command, not just the flag"
+		container := container parentSandblock.
+		(insertIndex > 1) ifTrue: [previousBlock := container submorphs at: insertIndex - 1]].
+	"not flag --> ifFalse?"
+	(aCommand element isTSChoice and: [aCommand element alternatives anySatisfy: [:alt | alt type = #'_primary_expression']]) ifTrue: [
+		| insertIndex |
+		insertIndex := aCommand index.
+		(insertIndex > 1) ifTrue: [previousBlock := container submorphs at: insertIndex - 1]].
+		(aCommand element type = #'flag_argument') ifTrue: [
+		]. 
 	
 	fullCommandBlock := container.
 	[(fullCommandBlock type = #command) or: [fullCommandBlock type = #program]] whileFalse: [fullCommandBlock := fullCommandBlock parentSandblock].
@@ -3311,10 +3331,13 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 		fullCommand: container sourceString;
 		terminal: terminal;
 		sandblockEditor: editor.
-	
+
 	self loadCommandObjectFor: info.
 	self loadInsertFileNameCompletionsFrom: info into: suggestions.
-	info fullCommand = '' ifFalse: [self loadInsertSubcommandsFrom: info into: suggestions].
+	(info fullCommand ~= '' and: [previousBlock notNil]) ifTrue: [
+		"only if previous Block is a command_name, load subcommands"
+		previousBlock slot nodes detect: [:node | node type = #'command_name'] ifFound: [ :e |
+			self loadInsertSubcommandsFrom: info into: suggestions]].
 	self loadInsertSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
 		terminal synopsis: info commandObject synopsis.
