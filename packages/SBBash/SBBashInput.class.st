@@ -65,11 +65,14 @@ SBBashInput class >> canRecallCommand: aBlock [
 SBBashInput class >> confirm: aBlock [
 	<action>
 
-	| pty terminal command |
+	| pty terminal command commandBlock |
 	terminal := aBlock containingArtefact.
-	command := ((aBlock orOwnerSuchThat: [:b | b isTSBlock and: [b type = #command]])
-		ifNil: [aBlock childSandblocks first type = #command ifTrue: [aBlock childSandblocks first] ifFalse: [^ self]])
-			ifNotNil: [aBlock toplevel sourceString].
+	commandBlock := (aBlock orOwnerSuchThat: [:b | b isTSBlock and: [b type = #command]]) ifNil: [
+		aBlock childSandblocks first type = #command
+			ifTrue: [aBlock childSandblocks first]
+			ifFalse: [^ self]].
+	command := commandBlock ifNotNil: [aBlock toplevel sourceString].
+	(commandBlock allBlocksDetect: [:b | b valid not] ifFound: [:b | true] ifNone: [false]) ifTrue: [^ self].
 	pty := terminal pty.
 	terminal state: #hidden.
 	terminal newestCommandBlock commandString: command.

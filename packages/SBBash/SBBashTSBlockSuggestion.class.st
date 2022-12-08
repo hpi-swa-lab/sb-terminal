@@ -6,10 +6,20 @@ Class {
 		'terminalCommand',
 		'key',
 		'icon',
-		'alternatives'
+		'alternatives',
+		'selectorMorph'
 	],
 	#category : #SBBash
 }
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> active: aBoolean [
+
+	super active: aBoolean.
+	selectorMorph contents: (aBoolean ifTrue: [selector] ifFalse: [selector printStringLimitedTo: 50]).
+	self height: 0.
+	selectorMorph height: 0.
+]
 
 { #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> alternatives [
@@ -126,8 +136,8 @@ SBBashTSBlockSuggestion >> selector: aString [
 	| container |
 	container := self firstSubmorph.
 	selector := aString.
-	container addMorphBack: (SBMultilineOwnTextMorph new
-		contents: aString;
+	container addMorphBack: (selectorMorph := SBMultilineOwnTextMorph new
+		contents: (aString printStringLimitedTo: 50);
 		hResizing: #spaceFill;
 		maxWidth: 400)
 ]
