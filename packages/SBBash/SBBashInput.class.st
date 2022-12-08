@@ -162,6 +162,13 @@ SBBashInput class >> formatRawBash: input [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> gapBetween: aBlock and: anotherBlock [
+
+	anotherBlock contents ifNotNil: [anotherBlock contents ifNotEmpty: [:c | ^ c first ~= $=]].
+	^ true
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> getSuggestionFromCommand: aCommandObject in: anEditor [
 
 	| selector upto contents |
