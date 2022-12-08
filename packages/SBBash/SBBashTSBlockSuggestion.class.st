@@ -7,7 +7,8 @@ Class {
 		'key',
 		'icon',
 		'alternatives',
-		'selectorMorph'
+		'selectorMorph',
+		'showMoreButton'
 	],
 	#category : #SBBash
 }
@@ -16,8 +17,17 @@ Class {
 SBBashTSBlockSuggestion >> active: aBoolean [
 
 	super active: aBoolean.
-	selectorMorph contents: (aBoolean ifTrue: [selector] ifFalse: [selector printStringLimitedTo: 50]).
+	selectorMorph ifNotNil: [
+		selectorMorph contents: (aBoolean
+			ifTrue: [self printString: selector limitedTo: self activeLimit]
+			ifFalse: [self printString: selector limitedTo: self inactiveLimit])].
 	self firstSubmorph height: 0
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> activeLimit [
+
+	^ 400
 ]
 
 { #category : #'as yet unclassified' }
@@ -97,6 +107,12 @@ SBBashTSBlockSuggestion >> icon: anObject [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> inactiveLimit [
+
+	^ 100
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> key [
 
 	key ifNotNil: [^ key] ifNil: [^ option]
@@ -130,15 +146,31 @@ SBBashTSBlockSuggestion >> preview: aForm previewOnly: aBoolean [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> printString: aString limitedTo: aNumber [
+
+	| limitedString |
+	limitedString := String streamContents: [:s | aString printOn: s] limitedTo: aNumber.
+	limitedString size < aNumber ifTrue: [^ limitedString].
+	^ limitedString, '...'
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> selector: aString [
 
 	| container |
 	container := self firstSubmorph.
 	selector := aString.
 	container addMorphBack: (selectorMorph := SBMultilineOwnTextMorph new
-		contents: (aString printStringLimitedTo: 50);
+		contents: (aString printStringLimitedTo: self inactiveLimit);
 		hResizing: #spaceFill;
-		maxWidth: 400)
+		maxWidth: 400).
+	aString size > self activeLimit ifTrue: [ | commandString |
+		commandString := (command morphs collect: [:r | r sourceString]) join.
+		showMoreButton := SBButton new
+			label: 'Show full'
+			shortcut: nil
+			do: [UIManager default inform: commandString, String cr, selector].
+		container addMorphBack: showMoreButton]
 ]
 
 { #category : #'as yet unclassified' }

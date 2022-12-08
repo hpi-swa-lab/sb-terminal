@@ -2990,13 +2990,13 @@ SBBashInput class >> loadDirectoryEntryCompletionsFrom: anInfoObject into: aColl
 				name := entry name].
 		aCollection add: (SBBashTSBlockSuggestion new
 			icon: icon;
+			option: searchPath, name;
 			selector: name;
 			blocks: {
 					(self blockFor: #word)
 						contents: searchPath, name;
 						yourself}
 				in: anInfoObject sandblockEditor;
-			option: searchPath, name;
 			key: name)]
 ]
 
@@ -3154,11 +3154,11 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 						b]}].
 		
 		collection add: (SBBashTSBlockSuggestion new
-			selector: info description;
 			alternatives: info flagsJoined;
 			blocks: morphs in: anInfoObject sandblockEditor;
 			option: info firstFlag;
-			terminalCommand: anInfoObject mainCommand).
+			terminalCommand: anInfoObject mainCommand;
+			selector: info description).
 		"with optionals"
 		info optionals notEmpty ifTrue: [
 			morphs := info optionals collect: [:opt |
