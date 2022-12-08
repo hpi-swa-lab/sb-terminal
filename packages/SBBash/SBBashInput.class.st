@@ -3176,6 +3176,17 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInput class >> postprocessGrammar: aGrammar [
+
+	super postprocessGrammar: aGrammar.
+	aGrammar rules at: 'program' put: (SBTSNodeRepeat new
+		multiple: false
+			required: false
+			element: (SBTSNodeSymbol new type: '_statement' factory: aGrammar);
+		factory: aGrammar)
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInput class >> recallCommandDown: aBlock [
 	<action>
 	<actionValidIf: #canRecallCommand:>
