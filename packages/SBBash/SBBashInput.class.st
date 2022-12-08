@@ -3052,8 +3052,8 @@ SBBashInput class >> loadInsertSuggestionsFrom: anInfoObject into: collection [
 						b]}].
 		collection add: (SBBashInsertSuggestionItem new
 			morphs: morphs editor: anInfoObject sandblockEditor;
-			selector: flagInfo description;
-			key: flagInfo firstFlag).
+			key: flagInfo firstFlag;
+			selector: flagInfo description).
 		"with optionals"
 		flagInfo optionals notEmpty ifTrue: [
 			morphs := flagInfo optionals collect: [:opt |

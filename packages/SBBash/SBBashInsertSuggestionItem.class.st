@@ -6,10 +6,35 @@ Class {
 		'terminalCommand',
 		'blocks',
 		'morphs',
-		'key'
+		'key',
+		'selectorMorph',
+		'command',
+		'showMoreButton'
 	],
 	#category : #SBBash
 }
+
+{ #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> active: aBoolean [
+
+	super active: aBoolean.
+	selectorMorph ifNotNil: [
+		selectorMorph contents: (aBoolean
+			ifTrue: [self printString: selector limitedTo: self activeLimit]
+			ifFalse: [self printString: selector limitedTo: self inactiveLimit])].
+	self firstSubmorph height: 0
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> activeLimit [
+
+	^ 400
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> inactiveLimit [
+	^ 100
+]
 
 { #category : #'as yet unclassified' }
 SBBashInsertSuggestionItem >> key [
@@ -48,15 +73,36 @@ SBBashInsertSuggestionItem >> option: anObject [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> printString: aString limitedTo: aNumber [ 
+	| limitedString |
+	limitedString := String
+				streamContents: [:s | aString printOn: s]
+				limitedTo: aNumber.
+	limitedString size < aNumber
+		ifTrue: [^ limitedString].
+	^ limitedString , '...'
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInsertSuggestionItem >> selector: aString [
 
 	| container |
 	container := self firstSubmorph.
 	selector := aString.
-	container addMorphBack: (SBMultilineOwnTextMorph new
-		contents: aString;
+	
+	container addMorphBack: (selectorMorph := SBMultilineOwnTextMorph new
+		contents: (self printString: aString limitedTo: self inactiveLimit);
 		hResizing: #spaceFill;
-		maxWidth: 400)
+		maxWidth: 400).
+	
+	aString size > self activeLimit ifTrue: [ | commandString |
+		commandString := (morphs collect: [:r |
+			r sourceString ifNotEmpty: [r sourceString] ifEmpty: [r submorphs first placeholderText]]) joinSeparatedBy: ' '.
+		showMoreButton := SBButton new
+			label: 'Show full'
+			shortcut: nil
+			do: [UIManager default inform: commandString, String cr, selector].
+		container addMorphBack: showMoreButton]
 ]
 
 { #category : #'as yet unclassified' }

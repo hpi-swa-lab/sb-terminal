@@ -160,12 +160,15 @@ SBBashTSBlockSuggestion >> selector: aString [
 	| container |
 	container := self firstSubmorph.
 	selector := aString.
+	
 	container addMorphBack: (selectorMorph := SBMultilineOwnTextMorph new
-		contents: (aString printStringLimitedTo: self inactiveLimit);
+		contents: (self printString: aString limitedTo: self inactiveLimit);
 		hResizing: #spaceFill;
 		maxWidth: 400).
+	
 	aString size > self activeLimit ifTrue: [ | commandString |
-		commandString := (command morphs collect: [:r | r sourceString]) join.
+		commandString := (command morphs collect: [:r |
+			r sourceString ifNotEmpty: [r sourceString] ifEmpty: [r submorphs first placeholderText]]) joinSeparatedBy: ' '.
 		showMoreButton := SBButton new
 			label: 'Show full'
 			shortcut: nil
