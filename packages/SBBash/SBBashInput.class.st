@@ -178,13 +178,13 @@ SBBashInput class >> getSuggestionFromCommand: aCommandObject in: anEditor [
 	upto < 0 ifTrue: [upto := aCommandObject commandString size].
 	contents := aCommandObject commandString from: 1 to: upto.
 	^ SBBashTSBlockSuggestion new
-		selector: selector;
 		blocks: {
 				(self blockFor: #word)
 					contents: contents;
 					yourself}
 			in: anEditor;
 		option: aCommandObject commandString;
+		selector: selector;
 		key: contents
 ]
 
@@ -2997,13 +2997,13 @@ SBBashInput class >> loadDirectoryEntryCompletionsFrom: anInfoObject into: aColl
 				name := entry name].
 		aCollection add: (SBBashTSBlockSuggestion new
 			icon: icon;
-			selector: name;
+			option: searchPath, name;
 			blocks: {
 					(self blockFor: #word)
 						contents: searchPath, name;
 						yourself}
 				in: anInfoObject sandblockEditor;
-			option: searchPath, name;
+			selector: name;
 			key: name)]
 ]
 
@@ -3021,12 +3021,12 @@ SBBashInput class >> loadInsertSubcommandsFrom: anInfoObject into: collection [
 	subcommands := self loadOnlyNextSubcommandsFor: anInfoObject.
 	subcommands do: [:subcmd |
 		collection add: (SBBashInsertSuggestionItem new
-			selector: subcmd commandName;
 			morphs: {
 					(self blockFor: #word)
 						contents: subcmd commandString;
 						yourself}
 				editor: anInfoObject sandblockEditor;
+			selector: subcmd commandName;
 			key: subcmd commandString)]
 ]
 
@@ -3058,9 +3058,9 @@ SBBashInput class >> loadInsertSuggestionsFrom: anInfoObject into: collection [
 						b lastDeepChild lastSubmorph placeholderText: flagInfo arguments first.
 						b]}].
 		collection add: (SBBashInsertSuggestionItem new
-			selector: flagInfo description;
 			morphs: morphs editor: anInfoObject sandblockEditor;
-			key: flagInfo firstFlag).
+			key: flagInfo firstFlag;
+			selector: flagInfo description).
 		"with optionals"
 		flagInfo optionals notEmpty ifTrue: [
 			morphs := flagInfo optionals collect: [:opt |
@@ -3106,13 +3106,13 @@ SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 	subcommands do: [:subcmd |
 		(subcmd commandName asLowercase includesSubstring: anInfoObject searchString asLowercase) ifTrue: [
 			collection add: (SBBashTSBlockSuggestion new
-				selector: subcmd commandName;
 				blocks: {
 						(self blockFor: #word)
 							contents: subcmd commandString;
 							yourself}
 					in: anInfoObject sandblockEditor;
 				option: subcmd commandString;
+				selector: subcmd commandName;
 				key: subcmd commandString)]]
 ]
 
@@ -3161,11 +3161,11 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 						b]}].
 		
 		collection add: (SBBashTSBlockSuggestion new
-			selector: info description;
 			alternatives: info flagsJoined;
 			blocks: morphs in: anInfoObject sandblockEditor;
 			option: info firstFlag;
-			terminalCommand: anInfoObject mainCommand).
+			terminalCommand: anInfoObject mainCommand;
+			selector: info description).
 		"with optionals"
 		info optionals notEmpty ifTrue: [
 			morphs := info optionals collect: [:opt |

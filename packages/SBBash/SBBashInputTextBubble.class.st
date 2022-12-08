@@ -145,9 +145,9 @@ SBBashInputTextBubble >> suggestionsFrom: command into: collection [
 		suggestionText := flagsJoined, ': ', description.
 		((flagsJoined asLowercase includesSubstring: current asLowercase) or: (description asLowercase includesSubstring: current asLowercase)) ifTrue: [
 			collection add: (SBBashTSBlockSuggestion new
-				selector: suggestionText;
 				option: firstFlag;
-				terminalCommand: command commandString)]]
+				terminalCommand: command commandString;
+				selector: suggestionText)]]
 ]
 
 { #category : #'as yet unclassified' }
