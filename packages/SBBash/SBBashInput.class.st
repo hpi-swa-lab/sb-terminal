@@ -118,11 +118,11 @@ SBBashInput class >> filterAndOrderSuggestions: allEntries Given: searchString [
 	"first show the exact match case sensitive"
 	exactMatchC := allEntries select: [:entry | entry name = searchString].
 	"second show prefix matches case sensitive"
-	prefixMatchesC := allEntries select: [:entry | entry name startsWith: searchString].
+	prefixMatchesC := allEntries select: [:entry | entry name beginsWith: searchString].
 	"third show exact match case insensitive"
 	exactMatchI := allEntries select: [:entry | entry name asLowercase = searchString asLowercase].
 	"fourth show prefix matches case insensitive"
-	prefixMatchesI := allEntries select: [:entry | entry name asLowercase startsWith: searchString asLowercase].
+	prefixMatchesI := allEntries select: [:entry | entry name asLowercase beginsWith: searchString asLowercase].
 	"then the rest"
 	otherEntries := allEntries select: [:entry | searchString = '' or: [entry name asLowercase includesSubstring: searchString asLowercase]].
 	
@@ -3131,9 +3131,9 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 	
 	searchString := anInfoObject searchString.
 	exactMatchC := flagInformations select: [:entry | entry searchCriterium anySatisfy: [:c | c = searchString]].
-	prefixMatchesC := flagInformations select: [:entry | entry searchCriterium anySatisfy: [:c | c startsWith: searchString]].
+	prefixMatchesC := flagInformations select: [:entry | entry searchCriterium anySatisfy: [:c | c beginsWith: searchString]].
 	exactMatchI := flagInformations select: [:entry | entry searchCriterium anySatisfy: [:c | c asLowercase = searchString asLowercase]].
-	prefixMatchesI := flagInformations select: [:entry | entry searchCriterium anySatisfy: [:c | c asLowercase startsWith: searchString asLowercase]].
+	prefixMatchesI := flagInformations select: [:entry | entry searchCriterium anySatisfy: [:c | c asLowercase beginsWith: searchString asLowercase]].
 	otherEntries := flagInformations select: [:entry | searchString = '' or: [entry searchCriterium anySatisfy: [:c | c asLowercase includesSubstring: searchString asLowercase]]].
 	validOptions := exactMatchC, prefixMatchesC, (exactMatchI, (prefixMatchesI, otherEntries)).
 	

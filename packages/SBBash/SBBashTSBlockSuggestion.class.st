@@ -17,8 +17,7 @@ SBBashTSBlockSuggestion >> active: aBoolean [
 
 	super active: aBoolean.
 	selectorMorph contents: (aBoolean ifTrue: [selector] ifFalse: [selector printStringLimitedTo: 50]).
-	self height: 0.
-	selectorMorph height: 0.
+	self firstSubmorph height: 0
 ]
 
 { #category : #'as yet unclassified' }

@@ -131,7 +131,7 @@ SBBashCommandInformation >> terminal: anObject [
 SBBashCommandInformation >> trimFlagsAndDoFrom: aString [
 
 	| withoutDo upTo |
-	withoutDo := (aString startsWith: 'do ')
+	withoutDo := (aString beginsWith: 'do ')
 		ifTrue: [aString from: 4]
 		ifFalse: [aString].
 	upTo := withoutDo findString: '-'.
