@@ -3150,20 +3150,22 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 	otherEntries := flagInformations select: [:entry | searchString = '' or: [entry searchCriterium anySatisfy: [:c | c asLowercase includesSubstring: searchString asLowercase]]].
 	validOptions := exactMatchC, prefixMatchesC, (exactMatchI, (prefixMatchesI, otherEntries)).
 	
-	validOptions do: [:info | | morphs |
+	validOptions do: [:info | | morphs argumentPlaceholder |
 		info arguments
 			ifEmpty: [
+				argumentPlaceholder := ''.
 				morphs := {
 					(SBBashInput blockFor: #flag)
 						contents: info firstFlag;
 						yourself}]
 			ifNotEmpty: [
+				argumentPlaceholder := info arguments first.
 				morphs := {
 					(SBBashInput blockFor: #flag)
 						contents: info firstFlag;
 						yourself.
 					(SBBashInput blockFor: #word) in: [:b |
-						b lastDeepChild lastSubmorph placeholderText: info arguments first.
+						b lastDeepChild lastSubmorph placeholderText: argumentPlaceholder.
 						b]}].
 		
 		collection add: (SBBashTSBlockSuggestion new
@@ -3171,21 +3173,21 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 			blocks: morphs in: anInfoObject sandblockEditor;
 			option: info firstFlag;
 			terminalCommand: anInfoObject mainCommand;
-			selector: info description).
+			selector: info description;
+			key: info firstFlag, argumentPlaceholder).
 		"with optionals"
 		info optionals notEmpty ifTrue: [
 			morphs := info optionals collect: [:opt |
-				(SBBashInput blockFor: #flag)
+				((SBBashInput blockFor: #flag)
 					contents: info firstFlag;
 					addBlock: ((SBBashInput blockFor: #'flag_argument') in: [:b |
 						b lastDeepChild lastSubmorph placeholderText: opt.
-						b]);
-					yourself].
+						b])) yourself].
 			collection add: (SBBashTSBlockSuggestion new
 				blocks: morphs in: anInfoObject sandblockEditor;
 				option: info firstFlag;
 				terminalCommand: anInfoObject mainCommand;
-				key: info firstFlag, 'optional')]]
+				key: info firstFlag, argumentPlaceholder, 'optional')]]
 ]
 
 { #category : #'as yet unclassified' }
