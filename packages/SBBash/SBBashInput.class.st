@@ -3384,7 +3384,7 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 		terminal description: info commandObject description.
 		"gm is special"
 		exampleCommand := info mainCommand.
-		exampleCommand = 'gm' ifTrue: [container submorphs size > 1 ifTrue: [exampleCommand := (container submorphs at: 2) sourceString]].
+		(exampleCommand startsWith: 'gm') ifTrue: [container submorphs size > 1 ifTrue: [exampleCommand := (container submorphs at: 2) sourceString]].
 		terminal examples: (self formatRawBash: (UnixProcess thisOSProcess waitForCommandOutput: 'tldr ', exampleCommand) readStream)].
 	
 	editor suggestionMenu focusHint contents: 'strg + j: focus  |  type keywords to filter  |  esc: hide suggestions'.
