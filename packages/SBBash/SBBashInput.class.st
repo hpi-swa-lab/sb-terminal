@@ -3130,6 +3130,24 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 	onlyFlags := anInfoObject onlyShowFlags.
 	anInfoObject commandObject ifNil: [^ {}].
 	
+	"show current flag and parameter"
+	(anInfoObject previousBlock notNil and: [anInfoObject previousBlock type = #flag]) ifTrue: [
+		anInfoObject commandObject options
+			detect: [:o | (o at: #flags) anySatisfy: [:flag | flag = anInfoObject previousBlock sourceString]]
+			ifFound: [:e | | morphs |
+				morphs := {
+					(SBBashInput blockFor: #flag)
+						contents: (e at: #flags) first;
+						yourself.
+					(SBBashInput blockFor: #word) in: [:b |
+						b lastDeepChild lastSubmorph placeholderText: (e at: #arguments) first.
+						b]}.
+				collection addFirst: (SBBashTSBlockSuggestion new
+					blocks: morphs in: anInfoObject sandblockEditor;
+					option: anInfoObject previousBlock sourceString;
+					terminalCommand: anInfoObject mainCommand;
+					key: 'completely-unique-SuperManPage-feature')]].
+	
 	flagInformations := anInfoObject commandObject options collect: [:option | | searchCriteria info |
 		info := SBBashFlagInformation new
 			description: (option at: #description);
@@ -3290,7 +3308,6 @@ SBBashInput class >> suggestionsFor: aBlock [
 	| suggestions info terminal searchString onlyShowFlags onlyShowFileNames fullCommandBlock blockIndex previousBlock |
 	suggestions := OrderedCollection new.
 	(aBlock type ~= #word and: [aBlock type ~= #flag]) ifTrue: [^ suggestions].
-	
 	((aBlock sourceString beginsWith: '-') or: (aBlock sourceString beginsWith: '+'))
 		ifTrue: [
 			onlyShowFlags := true.
@@ -3311,13 +3328,18 @@ SBBashInput class >> suggestionsFor: aBlock [
 	blockIndex := fullCommandBlock submorphs indexOf: aBlock.
 	previousBlock := nil.
 	(blockIndex > 1) ifTrue: [previousBlock := fullCommandBlock submorphs at: blockIndex - 1].
+	"not sure with the next line"
+	(aBlock owner type = #concatenation) ifTrue: [previousBlock := aBlock owner submorphs first].
+
 	info := SBBashCommandInformation new
 		fullCommand: fullCommandBlock sourceString;
 		searchString: searchString;
 		terminal: terminal;
 		sandblockEditor: aBlock sandblockEditor;
 		onlyShowFlags: onlyShowFlags;
-		onlyShowFileNames: onlyShowFileNames.
+		onlyShowFileNames: onlyShowFileNames;
+		previousBlock: previousBlock;
+		currentBlock: aBlock.
 	
 	"check if aBlock is a command_name (not sure why, but the actual type is word)"
 	aBlock slot nodes detect: [:node | node type = #'command_name'] ifFound: [:e |
@@ -3329,8 +3351,9 @@ SBBashInput class >> suggestionsFor: aBlock [
 	self loadDirectoryEntryCompletionsFrom: info into: suggestions.
 	"only if previous Block is a command_name, load subcommands"
 	previousBlock ifNotNil: [
-		previousBlock slot nodes detect: [:node | node type = #'command_name'] ifFound: [:e | 
-			self loadSubcommandsFrom: info into: suggestions.]].
+		previousBlock slot nodes
+			detect: [:node | node type = #'command_name']
+			ifFound: [:e | self loadSubcommandsFrom: info into: suggestions]].
 	self loadSuggestionsFrom: info into: suggestions.
 	info commandObject ifNotNil: [
 		terminal synopsis: info commandObject synopsis.

@@ -10,7 +10,8 @@ Class {
 		'commandObject',
 		'sandblockEditor',
 		'onlyShowFlags',
-		'onlyShowFileNames'
+		'onlyShowFileNames',
+		'currentBlock'
 	],
 	#category : #SBBash
 }
@@ -25,6 +26,18 @@ SBBashCommandInformation >> commandObject [
 SBBashCommandInformation >> commandObject: anObject [
 
 	commandObject := anObject
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandInformation >> currentBlock [
+
+	^ currentBlock
+]
+
+{ #category : #'as yet unclassified' }
+SBBashCommandInformation >> currentBlock: aBlock [
+
+	currentBlock := aBlock
 ]
 
 { #category : #'as yet unclassified' }
