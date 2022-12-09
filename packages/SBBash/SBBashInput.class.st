@@ -3099,21 +3099,27 @@ SBBashInput class >> loadOnlyNextSubcommandsFor: anInfoObject [
 { #category : #'as yet unclassified' }
 SBBashInput class >> loadSubcommandsFrom: anInfoObject into: collection [
 
-	| subcommands |
+	| subcommands exactMatchC prefixMatchesC exactMatchI prefixMatchesI otherEntries filteredSubcommands |
 	(anInfoObject onlyShowFlags or: [anInfoObject onlyShowFileNames]) ifTrue: [^ {}].
 	
 	subcommands := self loadOnlyNextSubcommandsFor: anInfoObject.
-	subcommands do: [:subcmd |
-		(subcmd commandName asLowercase includesSubstring: anInfoObject searchString asLowercase) ifTrue: [
-			collection add: (SBBashTSBlockSuggestion new
-				blocks: {
-						(self blockFor: #word)
-							contents: subcmd commandString;
-							yourself}
-					in: anInfoObject sandblockEditor;
-				option: subcmd commandString;
-				selector: subcmd commandName;
-				key: subcmd commandString)]]
+	exactMatchC := subcommands select: [:entry | entry commandString = anInfoObject searchString].
+	prefixMatchesC := subcommands select: [:entry | entry commandString beginsWith: anInfoObject searchString].
+	exactMatchI := subcommands select: [:entry | entry commandString asLowercase = anInfoObject searchString asLowercase].
+	prefixMatchesI := subcommands select: [:entry | entry commandString asLowercase beginsWith: anInfoObject searchString asLowercase].
+	otherEntries := subcommands select: [:entry | anInfoObject searchString = '' or: [entry commandName asLowercase includesSubstring: anInfoObject searchString asLowercase]].
+	filteredSubcommands := exactMatchC, prefixMatchesC, (exactMatchI, (prefixMatchesI, otherEntries)).
+
+	filteredSubcommands do: [:subcmd |
+		collection add: (SBBashTSBlockSuggestion new
+			blocks: {
+					(self blockFor: #word)
+						contents: subcmd commandString;
+						yourself}
+				in: anInfoObject sandblockEditor;
+			option: subcmd commandString;
+			selector: subcmd commandName;
+			key: subcmd commandString)]
 ]
 
 { #category : #'as yet unclassified' }
