@@ -78,7 +78,7 @@ SBBashInput class >> confirm: aBlock [
 	terminal newestCommandBlock commandString: command.
 	terminal refreshCommandIndex.
 	"catch trouble commands and send them to a new terminal"
-	(self string: command startsWithAnyOf: {'man'. 'vim'. 'vi'. 'nano'. 'htop'}) ifTrue: [command := 'gnome-terminal -- ', command].
+	(self string: command startsWithAnyOf: {'man'. 'vim'. 'vi'. 'nano'. 'htop'. 'info'}) ifTrue: [command := 'gnome-terminal -- ', command].
 	terminal waitingForCommandString: command.
 	pty nextPutAll: command.
 	pty nextPut: Character return
@@ -3146,6 +3146,7 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 					blocks: morphs in: anInfoObject sandblockEditor;
 					option: anInfoObject previousBlock sourceString;
 					terminalCommand: anInfoObject mainCommand;
+					selector: (e at: #description);
 					key: 'completely-unique-SuperManPage-feature')]].
 	
 	flagInformations := anInfoObject commandObject options collect: [:option | | searchCriteria info |
@@ -3325,12 +3326,14 @@ SBBashInput class >> suggestionsFor: aBlock [
 	[fullCommandBlock type = #command] whileFalse: [
 		fullCommandBlock := fullCommandBlock parentSandblock.
 		fullCommandBlock isTSBlock ifFalse: [^ #()]].
+	terminal bashMode ifTrue: [^ suggestions].
+	
 	blockIndex := fullCommandBlock submorphs indexOf: aBlock.
 	previousBlock := nil.
-	(blockIndex > 1) ifTrue: [previousBlock := fullCommandBlock submorphs at: blockIndex - 1].
+	blockIndex > 1 ifTrue: [previousBlock := fullCommandBlock submorphs at: blockIndex - 1].
 	"not sure with the next line"
-	(aBlock owner type = #concatenation) ifTrue: [previousBlock := aBlock owner submorphs first].
-
+	aBlock owner type = #concatenation ifTrue: [previousBlock := aBlock owner submorphs first].
+	
 	info := SBBashCommandInformation new
 		fullCommand: fullCommandBlock sourceString;
 		searchString: searchString;
@@ -3372,6 +3375,8 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 	container := aCommand container.
 	terminal := container containingArtefact.
 	editor := container sandblockEditor.
+	
+	terminal bashMode ifTrue: [^ suggestions].
 	
 	previousBlock := nil.
 	"flag"

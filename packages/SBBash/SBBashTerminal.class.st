@@ -16,7 +16,8 @@ Class {
 		'debugOutput',
 		'allCommands',
 		'examples',
-		'pwd'
+		'pwd',
+		'bashMode'
 	],
 	#category : #SBBash
 }
@@ -58,6 +59,18 @@ SBBashTerminal >> attributesFrom: aString [
 				[#'91'] -> [TextColor red].
 				[#'90'] -> [TextColor black]}
 			otherwise: [TextColor gray]]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> bashMode [
+	
+	^ bashMode
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> bashMode: aBoolean [
+	
+	bashMode := aBoolean
 ]
 
 { #category : #'as yet unclassified' }

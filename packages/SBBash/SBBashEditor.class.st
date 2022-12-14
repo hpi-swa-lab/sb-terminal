@@ -15,6 +15,12 @@ Class {
 }
 
 { #category : #'as yet unclassified' }
+SBBashEditor class >> newBash [
+
+	^ self basicNew initializeWithoutSidebar
+]
+
+{ #category : #'as yet unclassified' }
 SBBashEditor class >> pathToAllManpageData [
 
 	^ self pathToManpageScripts, '../temp.data'
@@ -78,7 +84,8 @@ SBBashEditor >> initialize [
 	self width: 80 * 8 + (sidebarWidth + 50).
 	self openMorph: (terminal := SBBashTerminal new
 		hResizing: #spaceFill;
-		vResizing: #spaceFill).
+		vResizing: #spaceFill;
+		bashMode: false).
 	
 	self submorphs second addMorphBack: (sidebarScroll := ScrollPane new
 		hResizing: #shrinkWrap;
@@ -104,6 +111,48 @@ SBBashEditor >> initialize [
 			minWidth: sidebarWidth);
 		layoutInset: 4;
 		cellGap: 4).
+	
+	debugBlock := SBBashFormattedTextBubble multiLine
+		placeholderText: 'Nothing';
+		focusable: false;
+		maxWidth: sidebarWidth.
+	
+	inputMapping useSuggestionViaCr: false
+]
+
+{ #category : #'as yet unclassified' }
+SBBashEditor >> initializeWithoutSidebar [
+
+	| sidebarWidth |
+	super initialize.
+	
+	self width: 80 * 10.
+	self openMorph: (terminal := SBBashTerminal new
+		hResizing: #spaceFill;
+		vResizing: #spaceFill;
+		bashMode: true).
+	
+	SBColumn new
+		addMorphBack: (synopsisCaption := SBTextBubble new contents: 'Synopsis:');
+		addMorphBack: (synopsisBlock := SBBashFormattedTextBubble multiLine
+			placeholderText: 'No synopsis found';
+			focusable: false;
+			maxWidth: sidebarWidth;
+			minWidth: sidebarWidth);
+		addMorphBack: (examplesCaption := SBTextBubble new contents: 'Examples:');
+		addMorphBack: (examplesBlock := SBBashFormattedTextBubble multiLine
+			placeholderText: 'No examples found';
+			focusable: false;
+			maxWidth: sidebarWidth;
+			minWidth: sidebarWidth);
+		addMorphBack: (descriptionCaption := SBTextBubble new contents: 'Description:');
+		addMorphBack: (descriptionBlock := SBBashFormattedTextBubble multiLine
+			placeholderText: 'No description found';
+			focusable: false;
+			maxWidth: sidebarWidth;
+			minWidth: sidebarWidth);
+		layoutInset: 4;
+		cellGap: 4.
 	
 	debugBlock := SBBashFormattedTextBubble multiLine
 		placeholderText: 'Nothing';
