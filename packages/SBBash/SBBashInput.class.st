@@ -164,8 +164,8 @@ SBBashInput class >> formatRawBash: input [
 { #category : #'as yet unclassified' }
 SBBashInput class >> gapBetween: aBlock and: anotherBlock [
 
-	anotherBlock contents ifNotNil: [anotherBlock contents ifNotEmpty: [:c | ^ c first ~= $=]].
-	^ true
+	(aBlock contents = '"' or: [anotherBlock contents = '"']) ifTrue: [^ false].
+	^ super gapBetween: aBlock and: anotherBlock
 ]
 
 { #category : #'as yet unclassified' }
@@ -3217,7 +3217,10 @@ SBBashInput class >> postprocessGrammar: aGrammar [
 		multiple: false
 			required: false
 			element: (SBTSNodeSymbol new type: '_statement' factory: aGrammar);
-		factory: aGrammar)
+		factory: aGrammar).
+	
+	(aGrammar rules at: 'string') elements second replaceBy: (aGrammar rules at: 'string') elements second element elements first elements second.
+	(aGrammar rules at: 'string') elements third delete
 ]
 
 { #category : #'as yet unclassified' }
@@ -3376,8 +3379,6 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 	terminal := container containingArtefact.
 	editor := container sandblockEditor.
 	
-	terminal bashMode ifTrue: [^ suggestions].
-	
 	previousBlock := nil.
 	"flag"
 	
@@ -3412,7 +3413,7 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 		terminal description: info commandObject description.
 		"gm is special"
 		exampleCommand := info mainCommand.
-		(exampleCommand startsWith: 'gm') ifTrue: [container submorphs size > 1 ifTrue: [exampleCommand := (container submorphs at: 2) sourceString]].
+		(exampleCommand beginsWith: 'gm') ifTrue: [container submorphs size > 1 ifTrue: [exampleCommand := (container submorphs at: 2) sourceString]].
 		terminal examples: (self formatRawBash: (UnixProcess thisOSProcess waitForCommandOutput: 'tldr ', exampleCommand) readStream)].
 	
 	editor suggestionMenu focusHint contents: 'strg + j: focus  |  type keywords to filter  |  esc: hide suggestions'.
