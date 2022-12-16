@@ -73,6 +73,9 @@ SBBashInput class >> confirm: aBlock [
 			ifFalse: [^ self]].
 	command := commandBlock ifNotNil: [aBlock toplevel sourceString].
 	(commandBlock allBlocksDetect: [:b | b valid not] ifFound: [:b | true] ifNone: [false]) ifTrue: [^ self].
+	terminal newestCommandBlock input ~= command ifTrue: [
+		terminal newestCommandBlock input: command].
+	
 	pty := terminal pty.
 	terminal state: #hidden.
 	terminal newestCommandBlock commandString: command.
@@ -3034,6 +3037,22 @@ SBBashInput class >> loadInsertSubcommandsFrom: anInfoObject into: collection [
 SBBashInput class >> loadInsertSuggestionsFrom: anInfoObject into: collection [
 
 	anInfoObject commandObject ifNil: [^ {}].
+	(anInfoObject previousBlock notNil and: [anInfoObject previousBlock type = #flag]) ifTrue: [
+		anInfoObject commandObject options
+			detect: [:o | (o at: #flags) anySatisfy: [:flag | flag = anInfoObject previousBlock sourceString]]
+			ifFound: [:e | | morphs |
+				(e at: #arguments) notEmpty ifTrue: [
+					morphs := {
+						(SBBashInput blockFor: #flag)
+							contents: (e at: #flags) first;
+							yourself.
+						(SBBashInput blockFor: #word) in: [:b |
+							b lastDeepChild lastSubmorph placeholderText: (e at: #arguments) first.
+							b]}.
+					collection addFirst: (SBBashInsertSuggestionItem new
+						morphs: morphs editor: anInfoObject sandblockEditor;
+						selector: (e at: #description);
+						key: 'completely-unique-SuperManPage-feature')]]].
 	anInfoObject commandObject options do: [:option | | morphs flagInfo |
 		"TODO: new from json"
 		flagInfo := SBBashFlagInformation new
@@ -3135,19 +3154,20 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 		anInfoObject commandObject options
 			detect: [:o | (o at: #flags) anySatisfy: [:flag | flag = anInfoObject previousBlock sourceString]]
 			ifFound: [:e | | morphs |
-				morphs := {
-					(SBBashInput blockFor: #flag)
-						contents: (e at: #flags) first;
-						yourself.
-					(SBBashInput blockFor: #word) in: [:b |
-						b lastDeepChild lastSubmorph placeholderText: (e at: #arguments) first.
-						b]}.
-				collection addFirst: (SBBashTSBlockSuggestion new
-					blocks: morphs in: anInfoObject sandblockEditor;
-					option: anInfoObject previousBlock sourceString;
-					terminalCommand: anInfoObject mainCommand;
-					selector: (e at: #description);
-					key: 'completely-unique-SuperManPage-feature')]].
+				(e at: #arguments) notEmpty ifTrue: [
+					morphs := {
+						(SBBashInput blockFor: #flag)
+							contents: (e at: #flags) first;
+							yourself.
+						(SBBashInput blockFor: #word) in: [:b |
+							b lastDeepChild lastSubmorph placeholderText: (e at: #arguments) first.
+							b]}.
+					collection addFirst: (SBBashTSBlockSuggestion new
+						blocks: morphs in: anInfoObject sandblockEditor;
+						option: anInfoObject previousBlock sourceString;
+						terminalCommand: anInfoObject mainCommand;
+						selector: (e at: #description);
+						key: 'completely-unique-SuperManPage-feature')]]].
 	
 	flagInformations := anInfoObject commandObject options collect: [:option | | searchCriteria info |
 		info := SBBashFlagInformation new
@@ -3238,7 +3258,12 @@ SBBashInput class >> recallCommandDown: aBlock [
 			newBlock input: ''.
 			newBlock commandString: '']
 		ifNotNil: [newBlock input: cmdString].
-	newBlock focus
+
+	"newBlock lastDeepChild select."
+	newBlock focus.
+	editor performForSelection: #moveCursorRight.
+	terminal recallingCommands: true.
+	editor performForSelection: #moveCursorRight
 ]
 
 { #category : #'as yet unclassified' }
@@ -3253,14 +3278,12 @@ SBBashInput class >> recallCommandUp: aBlock [
 	aBlock type ~= #program ifTrue: [
 		currentCmd := aBlock parentSandblock sourceString.
 		newBlock commandString ifNil: [newBlock commandString: currentCmd]].
-	"good idea?"
-	SBToggledCode
-		comment: ''
-		active: 0
-		do: {[terminal currentCommandBlock input: terminal currentCommandBlock commandString]}.
 	
 	newBlock input: terminal getPreviousCommandString.
-	newBlock focus
+	newBlock focus.
+	editor performForSelection: #moveCursorRight.
+	terminal recallingCommands: true.
+	editor performForSelection: #moveCursorRight
 ]
 
 { #category : #'as yet unclassified' }
@@ -3325,18 +3348,18 @@ SBBashInput class >> suggestionsFor: aBlock [
 			onlyShowFileNames := searchString includesSubstring: '/'].
 	"Könnte in eine Methode SBBashCommandInformation >> newFromBlock: aBlock"
 	terminal := aBlock containingArtefact.
+	terminal recallingCommands: false.
+	
 	fullCommandBlock := aBlock.
 	[fullCommandBlock type = #command] whileFalse: [
 		fullCommandBlock := fullCommandBlock parentSandblock.
 		fullCommandBlock isTSBlock ifFalse: [^ #()]].
-	terminal bashMode ifTrue: [^ suggestions].
 	
 	blockIndex := fullCommandBlock submorphs indexOf: aBlock.
 	previousBlock := nil.
 	blockIndex > 1 ifTrue: [previousBlock := fullCommandBlock submorphs at: blockIndex - 1].
-	"not sure with the next line"
-	aBlock owner type = #concatenation ifTrue: [previousBlock := aBlock owner submorphs first].
-	
+	"not sure with the next line, sometimes, concatenations happen"
+	(aBlock owner type = #concatenation and: [aBlock owner submorphs size <= 2]) ifTrue: [previousBlock := aBlock owner submorphs first].
 	info := SBBashCommandInformation new
 		fullCommand: fullCommandBlock sourceString;
 		searchString: searchString;
@@ -3379,9 +3402,10 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 	terminal := container containingArtefact.
 	editor := container sandblockEditor.
 	
+	terminal recallingCommands ifTrue: [^ #()].
+	"TODO"
 	previousBlock := nil.
 	"flag"
-	
 	aCommand element type = #'flag_argument' ifTrue: [ | insertIndex |
 		insertIndex := container parentSandblock submorphs indexOf: container.
 		"container actually should be the full command, not just the flag"

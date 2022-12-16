@@ -17,10 +17,17 @@ Class {
 		'allCommands',
 		'examples',
 		'pwd',
-		'bashMode'
+		'bashMode',
+		'recallingCommands'
 	],
 	#category : #SBBash
 }
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal class >> newWithBashmode: aBoolean [
+
+	^ self basicNew initializeWithBashmode: aBoolean
+]
 
 { #category : #'as yet unclassified' }
 SBBashTerminal class >> registerShortcuts: aProvider [
@@ -88,7 +95,7 @@ SBBashTerminal >> commands: anObject [
 { #category : #'as yet unclassified' }
 SBBashTerminal >> currentCommandBlock [
 
-	^ commandBlocks submorphs at: currentCommandIndex
+	^ commandBlocks submorphs at: {currentCommandIndex . commandBlocks submorphs size} min
 ]
 
 { #category : #'as yet unclassified' }
@@ -162,10 +169,11 @@ SBBashTerminal >> getSubsequentCommandString [
 ]
 
 { #category : #'as yet unclassified' }
-SBBashTerminal >> initialize [
+SBBashTerminal >> initializeWithBashmode: aBoolean [
 
 	super initialize.
 	
+	bashMode := aBoolean.
 	self
 		addMorphBack: (commandBlocks := SBBlock new
 			changeTableLayout;
@@ -207,7 +215,9 @@ SBBashTerminal >> launchBash [
 	(pty := PseudoTTY command: '/bin/bash' arguments: {'-i'}) isNil ifTrue: [^ self error: 'could not create process'].
 	
 	closed := false.
-	commands := (Json readFrom: (UnixProcess thisOSProcess waitForCommandOutput: 'cat ', SBBashEditor pathToAllManpageData) readStream) collect: [:cmd | SBBashCommand newFromJson: cmd forTerminal: self].
+	commands := bashMode
+		ifTrue: [#()]
+		ifFalse: [(Json readFrom: (UnixProcess thisOSProcess waitForCommandOutput: 'cat ', SBBashEditor pathToAllManpageData) readStream) collect: [:cmd | SBBashCommand newFromJson: cmd forTerminal: self]].
 	pty nextPutAll: ' PS1="\e]81m${PS1}\e]80m"'.
 	pty nextPut: Character return.
 	state := #output.
@@ -342,6 +352,18 @@ SBBashTerminal >> readFrom: input writeInto: ps1 and: output [
 					input next: waitingForCommandString size + 1 + ((waitingForCommandString occurrencesOf: Character cr) * 3).
 					state := #output]}
 			otherwise: [input next]]
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> recallingCommands [
+
+	^ recallingCommands
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTerminal >> recallingCommands: aBoolean [
+
+	recallingCommands := aBoolean
 ]
 
 { #category : #'as yet unclassified' }

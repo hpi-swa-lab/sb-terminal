@@ -19,8 +19,9 @@ SBBashTSBlockSuggestion >> active: aBoolean [
 	super active: aBoolean.
 	selectorMorph ifNotNil: [
 		selectorMorph contents: (aBoolean
-			ifTrue: [self printString: selector limitedTo: self activeLimit]
-			ifFalse: [self printString: selector limitedTo: self inactiveLimit])].
+			ifTrue: [
+				selector sbSuggestionLimitedTo: self activeLimit maxLines: self activeLines]
+			ifFalse: [selector sbSuggestionLimitedTo: self inactiveLimit maxLines: self inactiveLines])].
 	self firstSubmorph height: 0
 ]
 
@@ -28,6 +29,12 @@ SBBashTSBlockSuggestion >> active: aBoolean [
 SBBashTSBlockSuggestion >> activeLimit [
 
 	^ 400
+]
+
+{ #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> activeLines [
+
+	^ 10
 ]
 
 { #category : #'as yet unclassified' }
@@ -113,6 +120,12 @@ SBBashTSBlockSuggestion >> inactiveLimit [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashTSBlockSuggestion >> inactiveLines [
+
+	^ 3
+]
+
+{ #category : #'as yet unclassified' }
 SBBashTSBlockSuggestion >> key [
 
 	key ifNotNil: [^ key] ifNil: [^ option]
@@ -162,13 +175,12 @@ SBBashTSBlockSuggestion >> selector: aString [
 	selector := aString.
 	
 	container addMorphBack: (selectorMorph := SBMultilineOwnTextMorph new
-		contents: (self printString: aString limitedTo: self inactiveLimit);
+		contents: (aString sbSuggestionLimitedTo: self inactiveLimit maxLines: self inactiveLines);
 		hResizing: #spaceFill;
 		maxWidth: 400).
 	
 	aString size > self activeLimit ifTrue: [ | commandString |
-		commandString := (command morphs collect: [:r |
-			r sourceString ifNotEmpty: [r sourceString] ifEmpty: [r submorphs first placeholderText]]) joinSeparatedBy: ' '.
+		commandString := (command morphs collect: [:r | r sourceString ifNotEmpty: [r sourceString] ifEmpty: [r submorphs first placeholderText]]) joinSeparatedBy: ' '.
 		showMoreButton := SBButton new
 			label: 'Show full'
 			shortcut: nil

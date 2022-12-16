@@ -82,10 +82,9 @@ SBBashEditor >> initialize [
 	
 	sidebarWidth := 370.
 	self width: 80 * 8 + (sidebarWidth + 50).
-	self openMorph: (terminal := SBBashTerminal new
+	self openMorph: (terminal := (SBBashTerminal newWithBashmode: false)
 		hResizing: #spaceFill;
-		vResizing: #spaceFill;
-		bashMode: false).
+		vResizing: #spaceFill).
 	
 	self submorphs second addMorphBack: (sidebarScroll := ScrollPane new
 		hResizing: #shrinkWrap;
@@ -127,10 +126,9 @@ SBBashEditor >> initializeWithoutSidebar [
 	super initialize.
 	
 	self width: 80 * 10.
-	self openMorph: (terminal := SBBashTerminal new
+	self openMorph: (terminal := (SBBashTerminal newWithBashmode: true)
 		hResizing: #spaceFill;
-		vResizing: #spaceFill;
-		bashMode: true).
+		vResizing: #spaceFill).
 	
 	SBColumn new
 		addMorphBack: (synopsisCaption := SBTextBubble new contents: 'Synopsis:');

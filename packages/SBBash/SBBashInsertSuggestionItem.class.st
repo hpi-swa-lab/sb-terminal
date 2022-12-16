@@ -20,9 +20,15 @@ SBBashInsertSuggestionItem >> active: aBoolean [
 	super active: aBoolean.
 	selectorMorph ifNotNil: [
 		selectorMorph contents: (aBoolean
-			ifTrue: [self printString: selector limitedTo: self activeLimit]
-			ifFalse: [self printString: selector limitedTo: self inactiveLimit])].
+			ifTrue: [selector sbSuggestionLimitedTo: self activeLimit maxLines: self activeLines]
+			ifFalse: [selector sbSuggestionLimitedTo: self inactiveLimit maxLines: self inactiveLines])].
 	self firstSubmorph height: 0
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> activeLies [
+
+	^ 10
 ]
 
 { #category : #'as yet unclassified' }
@@ -32,8 +38,19 @@ SBBashInsertSuggestionItem >> activeLimit [
 ]
 
 { #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> activeLines [
+
+	^ 10
+]
+
+{ #category : #'as yet unclassified' }
 SBBashInsertSuggestionItem >> inactiveLimit [
 	^ 100
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInsertSuggestionItem >> inactiveLines [
+	^ 3
 ]
 
 { #category : #'as yet unclassified' }
@@ -91,7 +108,7 @@ SBBashInsertSuggestionItem >> selector: aString [
 	selector := aString.
 	
 	container addMorphBack: (selectorMorph := SBMultilineOwnTextMorph new
-		contents: (self printString: aString limitedTo: self inactiveLimit);
+		contents: (aString sbSuggestionLimitedTo: self inactiveLimit maxLines: self inactiveLines);
 		hResizing: #spaceFill;
 		maxWidth: 400).
 	
