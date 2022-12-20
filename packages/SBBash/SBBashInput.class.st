@@ -58,7 +58,7 @@ SBBashInput class >> canAutocompleteFile: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> canRecallCommand: aBlock [
 
-	^ aBlock sandblockEditor suggestionMenu canUseSuggestion not
+	^ aBlock sandblockEditor suggestionMenu canUseSuggestion not or: [aBlock sandblockEditor suggestionMenu canMoveUp not]
 ]
 
 { #category : #'as yet unclassified' }
