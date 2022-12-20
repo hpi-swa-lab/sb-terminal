@@ -168,6 +168,7 @@ SBBashInput class >> formatRawBash: input [
 SBBashInput class >> gapBetween: aBlock and: anotherBlock [
 
 	(aBlock contents = '"' or: [anotherBlock contents = '"']) ifTrue: [^ false].
+	(anotherBlock type = 'flag_argument' or: [anotherBlock contents notEmpty and: [anotherBlock contents first = $=]]) ifTrue: [^ false].
 	^ super gapBetween: aBlock and: anotherBlock
 ]
 
@@ -3241,6 +3242,21 @@ SBBashInput class >> postprocessGrammar: aGrammar [
 	
 	(aGrammar rules at: 'string') elements second replaceBy: (aGrammar rules at: 'string') elements second element elements first elements second.
 	(aGrammar rules at: 'string') elements third delete
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> preprocessGrammar: aGrammar [
+
+	super preprocessGrammar: aGrammar.
+	
+	aGrammar rules at: 'flag_argument' put: (SBTSNodeText new
+		regexString: '=.+';
+		factory: aGrammar).
+	
+	"(aGrammar rules at: '_literal') elements second delete"
+	aGrammar removeRule: 'concatenation'.
+	
+	(aGrammar rules at: 'command') element elements third element alternatives second delete
 ]
 
 { #category : #'as yet unclassified' }
