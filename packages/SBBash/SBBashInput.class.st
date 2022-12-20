@@ -56,7 +56,13 @@ SBBashInput class >> canAutocompleteFile: aBlock [
 ]
 
 { #category : #'as yet unclassified' }
-SBBashInput class >> canRecallCommand: aBlock [
+SBBashInput class >> canRecallCommandDown: aBlock [
+
+	^ aBlock sandblockEditor suggestionMenu canUseSuggestion not
+]
+
+{ #category : #'as yet unclassified' }
+SBBashInput class >> canRecallCommandUp: aBlock [
 
 	^ aBlock sandblockEditor suggestionMenu canUseSuggestion not or: [aBlock sandblockEditor suggestionMenu canMoveUp not]
 ]
@@ -3266,7 +3272,7 @@ SBBashInput class >> preprocessGrammar: aGrammar [
 { #category : #'as yet unclassified' }
 SBBashInput class >> recallCommandDown: aBlock [
 	<action>
-	<actionValidIf: #canRecallCommand:>
+	<actionValidIf: #canRecallCommandDown:>
 
 	| editor terminal newBlock cmdString |
 	editor := aBlock sandblockEditor.
@@ -3278,7 +3284,7 @@ SBBashInput class >> recallCommandDown: aBlock [
 			newBlock input: ''.
 			newBlock commandString: '']
 		ifNotNil: [newBlock input: cmdString].
-
+	
 	"newBlock lastDeepChild select."
 	newBlock focus.
 	editor performForSelection: #moveCursorRight.
@@ -3289,7 +3295,7 @@ SBBashInput class >> recallCommandDown: aBlock [
 { #category : #'as yet unclassified' }
 SBBashInput class >> recallCommandUp: aBlock [
 	<action>
-	<actionValidIf: #canRecallCommand:>
+	<actionValidIf: #canRecallCommandUp:>
 
 	| editor terminal currentCmd newBlock |
 	editor := aBlock sandblockEditor.
