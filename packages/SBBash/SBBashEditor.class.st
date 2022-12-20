@@ -41,7 +41,7 @@ SBBashEditor class >> pathToManpageNameScript [
 { #category : #'as yet unclassified' }
 SBBashEditor class >> pathToManpageScripts [
 
-	^ '../manpages/manpage_completions/'
+	^ '/home/leo/Documents/Studium/1_Masterarbeit/manpages/manpage_completions/'
 ]
 
 { #category : #'as yet unclassified' }
@@ -164,6 +164,18 @@ SBBashEditor >> initializeWithoutSidebar [
 SBBashEditor >> insertCommandRequest: aMorph near: aBlock before: aBoolean [
 
 	^ nil
+]
+
+{ #category : #'as yet unclassified' }
+SBBashEditor >> performForSelection: anActionSymbol [
+
+	(self selection notNil and: [(self selection submorphs isEmpty and: [anActionSymbol = #deleteBeforeCursor]) not]) ifTrue: [
+		(self selection performAction: anActionSymbol) ifTrue: [^ true]].
+	
+	globalShortcutListeners do: [:listener |
+		(listener lookupGlobalAction: anActionSymbol) ifNotNil: [listener perform: anActionSymbol. ^ true]].
+	
+	^ false
 ]
 
 { #category : #'as yet unclassified' }

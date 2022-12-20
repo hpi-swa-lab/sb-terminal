@@ -174,7 +174,7 @@ SBBashInput class >> formatRawBash: input [
 SBBashInput class >> gapBetween: aBlock and: anotherBlock [
 
 	(aBlock contents = '"' or: [anotherBlock contents = '"']) ifTrue: [^ false].
-	(anotherBlock type = 'flag_argument' or: [anotherBlock contents notEmpty and: [anotherBlock contents first = $=]]) ifTrue: [^ false].
+	(anotherBlock type = 'flag_argument' or: [anotherBlock contents notNil and: [anotherBlock contents notEmpty and: [anotherBlock contents first = $=]]]) ifTrue: [^ false].
 	^ super gapBetween: aBlock and: anotherBlock
 ]
 
