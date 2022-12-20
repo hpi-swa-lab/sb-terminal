@@ -3212,7 +3212,7 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 						contents: info firstFlag;
 						yourself.
 					(SBBashInput blockFor: #word) in: [:b |
-						b lastDeepChild lastSubmorph placeholderText: '=', argumentPlaceholder.
+						b lastDeepChild lastSubmorph placeholderText: argumentPlaceholder.
 						b]}].
 		
 		collection add: (SBBashTSBlockSuggestion new
@@ -3428,7 +3428,7 @@ SBBashInput class >> suggestionsForInsert: aCommand [
 	terminal := container containingArtefact.
 	editor := container sandblockEditor.
 	
-	terminal recallingCommands ifTrue: [^ #()].
+	terminal recallingCommands ifNotNil: [terminal recallingCommands ifTrue: [^ #()]].
 	"TODO"
 	previousBlock := nil.
 	"flag"
