@@ -3083,13 +3083,14 @@ SBBashInput class >> loadInsertSuggestionsFrom: anInfoObject into: collection [
 			selector: flagInfo description).
 		"with optionals"
 		flagInfo optionals notEmpty ifTrue: [
-			morphs := flagInfo optionals collect: [:opt |
-				(SBBashInput blockFor: #flag)
-					contents: flagInfo firstFlag;
-					addBlock: ((SBBashInput blockFor: #'flag_argument') in: [:b |
-						b lastDeepChild lastSubmorph placeholderText: opt.
-						b]);
-					yourself].
+			morphs := flagInfo optionals gather: [:opt |
+				{
+					(SBBashInput blockFor: #flag)
+						contents: flagInfo firstFlag;
+						yourself.
+					(SBBashInput blockFor: #word) in: [:b |
+						b lastDeepChild lastSubmorph placeholderText: '=', opt.
+						b]}].
 			collection add: (SBBashInsertSuggestionItem new
 				morphs: morphs editor: anInfoObject sandblockEditor;
 				key: flagInfo firstFlag)]]
@@ -3205,7 +3206,7 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 						contents: info firstFlag;
 						yourself.
 					(SBBashInput blockFor: #word) in: [:b |
-						b lastDeepChild lastSubmorph placeholderText: argumentPlaceholder.
+						b lastDeepChild lastSubmorph placeholderText: '=', argumentPlaceholder.
 						b]}].
 		
 		collection add: (SBBashTSBlockSuggestion new
@@ -3217,12 +3218,12 @@ SBBashInput class >> loadSuggestionsFrom: anInfoObject into: collection [
 			key: info firstFlag, argumentPlaceholder).
 		"with optionals"
 		info optionals notEmpty ifTrue: [
-			morphs := info optionals collect: [:opt |
-				((SBBashInput blockFor: #flag)
-					contents: info firstFlag;
-					addBlock: ((SBBashInput blockFor: #'flag_argument') in: [:b |
+			morphs := info optionals gather: [:opt |
+				{
+					(SBBashInput blockFor: #flag) contents: info firstFlag.
+					(SBBashInput blockFor: #word) in: [:b |
 						b lastDeepChild lastSubmorph placeholderText: opt.
-						b])) yourself].
+						b]}].
 			collection add: (SBBashTSBlockSuggestion new
 				blocks: morphs in: anInfoObject sandblockEditor;
 				option: info firstFlag;
@@ -3249,9 +3250,12 @@ SBBashInput class >> preprocessGrammar: aGrammar [
 
 	super preprocessGrammar: aGrammar.
 	
-	aGrammar rules at: 'flag_argument' put: (SBTSNodeText new
-		regexString: '=.+';
-		factory: aGrammar).
+	SBToggledCode comment: '' active: 1 do: {
+		[aGrammar removeRule: 'flag_argument'].
+		[
+			aGrammar rules at: 'flag_argument' put: (SBTSNodeText new
+				regexString: '=.+';
+				factory: aGrammar)]}.
 	
 	"(aGrammar rules at: '_literal') elements second delete"
 	aGrammar removeRule: 'concatenation'.
