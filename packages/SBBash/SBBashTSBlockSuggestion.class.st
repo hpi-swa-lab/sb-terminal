@@ -181,10 +181,17 @@ SBBashTSBlockSuggestion >> selector: aString [
 	
 	aString size > self activeLimit ifTrue: [ | commandString |
 		commandString := (command morphs collect: [:r | r sourceString ifNotEmpty: [r sourceString] ifEmpty: [r submorphs first placeholderText]]) joinSeparatedBy: ' '.
-		showMoreButton := SBButton new
-			label: 'Show full'
-			shortcut: nil
-			do: [UIManager default inform: commandString, String cr, selector].
+		showMoreButton := SBButton new label: 'Show full' shortcut: nil do: [ | d |
+			d := UserDialogBoxMorph new
+				title: commandString;
+				message: selector;
+				createButton: 'Close' value: nil;
+				exclusive: false;
+				fullBounds;
+				morphicLayerNumber: self class dialogLayer;
+				moveToPreferredPosition;
+				openInWorld.
+			self currentHand newKeyboardFocus: d defaultFocusMorph].
 		container addMorphBack: showMoreButton]
 ]
 
