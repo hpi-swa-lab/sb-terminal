@@ -71,18 +71,32 @@ SBBashInput class >> canRecallCommandUp: aBlock [
 SBBashInput class >> confirm: aBlock [
 	<action>
 
-	| pty terminal command commandBlock |
+	| pty terminal command commandBlock words |
 	terminal := aBlock containingArtefact.
 	commandBlock := (aBlock orOwnerSuchThat: [:b | b isTSBlock and: [b type = #command]]) ifNil: [
-		aBlock childSandblocks first type = #command
+		(aBlock childSandblocks notEmpty and: [aBlock childSandblocks first type = #command])
 			ifTrue: [aBlock childSandblocks first]
 			ifFalse: [^ self]].
 	command := commandBlock ifNotNil: [aBlock toplevel sourceString].
 	(commandBlock allBlocksDetect: [:b | b valid not] ifFound: [:b | true] ifNone: [false]) ifTrue: [^ self].
 	terminal newestCommandBlock input ~= command ifTrue: [
 		terminal newestCommandBlock input: command].
-	
+
 	pty := terminal pty.
+	
+	"Fix for wrong gm behavior on geometry input with x in offset part."
+	words := command findTokens: ' '.
+	words withIndexDo: [:w :i | w regex: '[0-9]+x[0-9]+\+[0-9]+x.*' matchesCollect: [:c | | subcommand option errorText |
+			subcommand := words at: 2.
+			option := words at: (i - 1).
+			errorText := 'gm ', subcommand, ': Option ', option, ' requires an argument or argument is malformed.'.
+			terminal newestCommandBlock commandString: command.
+			terminal refreshCommandIndex.
+			pty nextPutAll: errorText.
+			pty nextPut: (Character value: 21).
+			pty nextPut: Character return.
+			^ self]].
+	
 	terminal state: #hidden.
 	terminal newestCommandBlock commandString: command.
 	terminal refreshCommandIndex.
